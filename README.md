@@ -1,53 +1,74 @@
-# Job Portal Backend
+🚀 Job Portal Backend (Spring Boot Learning Project)
 
-Backend service for a job portal application built with Spring Boot.
-This project follows a product-oriented approach and is being developed
-incrementally with clean architecture and industry best practices.
+This project is part of my Spring Boot Backend Development Journey where I am building a Job Portal step-by-step while learning core backend concepts.
 
----
+📌 Tech Stack
+Java
+Spring Boot
+Spring Web
+Spring Data JPA
+REST APIs
+Maven
 
-## 🚀 Tech Stack
-- Java
-- Spring Boot
-- Spring Web
-- Maven
+📅 Learning Progress
+✅ Day 1 – Spring Boot Setup
 
----
+Project Initialization
+Project Structure Understanding
+Running First Application
 
-## 📌 Project Goal
-To build a scalable backend system for a job portal that supports:
-- Candidate and recruiter roles
-- Secure authentication & authorization
-- Job posting and application workflows
-- Clean RESTful APIs
+✅ Day 2 – REST Basics
 
----
+@RestController
+@GetMapping, @PostMapping
+HTTP Methods
+Postman Testing
 
-## 📅 Progress
+📌 Goal: Build basic APIs
 
-### Day 1 – Project Setup
-- Initialized Spring Boot project
-- Configured Maven and dependencies
-- Set up basic project structure
-- Verified application startup
+✅ Day 3 – Request Handling
 
----
+@RequestBody
+@PathVariable
+@RequestParam
+ResponseEntity
+📌 Goal: Clean request–response flow
 
-## 🛠️ Upcoming Features
-- User authentication (JWT)
-- Role-based access control (Candidate / Recruiter)
-- Job management APIs
-- Job application workflow
-- Database integration with JPA/Hibernate
+✅ Day 4 – Layered Architecture
+Controller Layer
+Service Layer
+Repository Layer
+Dependency Injection
+📌 Goal: Understand clean & scalable architecture
 
----
+🏗️ Project Structure
+com.yourpackage.jobportal
+│
+├── controller
+├── service
+├── repository
+└── entity
 
-## 📖 Development Approach
-- Feature-driven development
-- Clean layered architecture (Controller, Service, Repository)
-- Incremental commits with clear progress tracking
+This follows Separation of Concerns for better maintainability and scalability.
 
----
+🎯 Objective
+To build a production-ready backend system while learning:
+Clean Code Practices
+RESTful API Design
+Layered Architecture
+Real-world Backend Development
 
-## 📌 Status
-🟢 **Active Development**
+📌 Upcoming Features
+Database Integration (MySQL)
+CRUD Operations
+Exception Handling
+Validation
+Pagination & Sorting
+Authentication (JWT)
+
+📈 Learning in Public
+I’m documenting my daily progress on:
+LinkedIn
+X (Twitter)
+
+Consistency > Motivation 💯
