@@ -1,74 +1,73 @@
-🚀 Job Portal Backend (Spring Boot Learning Project)
+## 🚀 Spring Boot Backend Learning Journey (Day 1–9)
 
-This project is part of my Spring Boot Backend Development Journey where I am building a Job Portal step-by-step while learning core backend concepts.
+This repository documents my hands-on backend development journey using **Java + Spring Boot**, focused on building production-ready skills.
 
-📌 Tech Stack
-Java
-Spring Boot
-Spring Web
-Spring Data JPA
-REST APIs
-Maven
+---
 
-📅 Learning Progress
-✅ Day 1 – Spring Boot Setup
+### 🧱 Week 1 — Foundations
 
-Project Initialization
-Project Structure Understanding
-Running First Application
+✅ **Day 1 — Spring Boot Setup**
+- Spring vs Spring Boot
+- Project structure
+- application.properties
+- Running first application
 
-✅ Day 2 – REST Basics
+✅ **Day 2 — REST API Basics**
+- @RestController
+- HTTP methods (GET, POST, etc.)
+- @GetMapping, @PostMapping
+- Testing APIs using Postman
 
-@RestController
-@GetMapping, @PostMapping
-HTTP Methods
-Postman Testing
+✅ **Day 3 — Request Handling**
+- @RequestBody
+- @PathVariable
+- @RequestParam
+- ResponseEntity
 
-📌 Goal: Build basic APIs
+✅ **Day 4 — Layered Architecture**
+- Controller layer
+- Service layer
+- Repository layer
+- Dependency Injection
 
-✅ Day 3 – Request Handling
+✅ **Day 5 — JPA & Hibernate Basics**
+- Entity creation
+- Primary keys
+- Repository interfaces
+- Basic CRUD operations
 
-@RequestBody
-@PathVariable
-@RequestParam
-ResponseEntity
-📌 Goal: Clean request–response flow
+✅ **Day 6 — Entity Relationships**
+- @OneToMany
+- @ManyToOne
+- @JoinColumn
+- Lazy vs Eager fetching
 
-✅ Day 4 – Layered Architecture
-Controller Layer
-Service Layer
-Repository Layer
-Dependency Injection
-📌 Goal: Understand clean & scalable architecture
+✅ **Day 7 — Pagination & Sorting**
+- Pageable
+- PageRequest
+- Sorting results
+- Building production-ready list APIs
 
-🏗️ Project Structure
-com.yourpackage.jobportal
-│
-├── controller
-├── service
-├── repository
-└── entity
+---
 
-This follows Separation of Concerns for better maintainability and scalability.
+### 🔐 Week 2 — Real-World Backend Concepts
 
-🎯 Objective
-To build a production-ready backend system while learning:
-Clean Code Practices
-RESTful API Design
-Layered Architecture
-Real-world Backend Development
+✅ **Day 8 — Exception Handling**
+- Custom exceptions
+- Global exception handling using @ControllerAdvice
+- Structured error responses
 
-📌 Upcoming Features
-Database Integration (MySQL)
-CRUD Operations
-Exception Handling
-Validation
-Pagination & Sorting
-Authentication (JWT)
+✅ **Day 9 — Validation**
+- Input validation using annotations
+- @NotNull, @Email, @Size, etc.
+- Handling validation errors
 
-📈 Learning in Public
-I’m documenting my daily progress on:
-LinkedIn
-X (Twitter)
+---
 
-Consistency > Motivation 💯
+### 🎯 Goal
+
+To build strong backend fundamentals and move towards designing secure, scalable, production-ready systems.
+
+---
+
+📌 More updates coming as the journey continues...
