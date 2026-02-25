@@ -1,15 +1,15 @@
 package com.saurabh.entity;
 
 import java.time.LocalDate;
-
-
+import java.util.ArrayList;
+import java.util.List;
 import jakarta.persistence.*;
 
 @Entity
 public class Job {
     @Id
     private int id;
-	private String title;
+	private String title; 
 	private String company;
 	private String location;
 	private String salrange;
@@ -19,10 +19,18 @@ public class Job {
 	private LocalDate postDate;
 	private LocalDate applyLastDate;
 	
+	@OneToMany(mappedBy = "job") // already madee table mapping 
+	private List<Application> applications =new ArrayList<>();	
+	
+	public void addApplication(Application app)
+	{
+		this.applications.add(app);
+		app.setJob(this); /// double check for database entry
+	}
+	
 	public Job() {
 		
 	}
-	
 	
 	public Job(int id, String title, String company, String location, String salrange, String type,
 			String skillRequired, String description, LocalDate postDate, LocalDate applyLastDate) {

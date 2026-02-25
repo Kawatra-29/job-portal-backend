@@ -1,9 +1,9 @@
 package com.saurabh.repository;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.saurabh.entity.candidate;
+import com.saurabh.entity.Candidate;
 
-public interface candidateRepository extends CrudRepository<candidate, Integer> {
-
+public interface candidateRepository extends JpaRepository<Candidate, Integer> {
+	 boolean existsByEmail(String email);
 }
