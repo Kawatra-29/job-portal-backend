@@ -3,13 +3,14 @@ package com.saurabh.service;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.saurabh.DTOs.ApplyDTO;
 import com.saurabh.entity.Application;
-import com.saurabh.entity.ApplyDTO;
 import com.saurabh.entity.Job;
 import com.saurabh.entity.Candidate;
 import com.saurabh.repository.AppRepository;
 import com.saurabh.repository.candidateRepository;
-import com.saurabh.repository.jobRepository;
+import com.saurabh.repository.JobRepository;
 
 @Service
 public class AppService {
@@ -21,7 +22,7 @@ public class AppService {
 	private candidateRepository candidateRepository;
 	
 	@Autowired
-	private jobRepository jobRepository;
+	private JobRepository jobRepository;
 	
 	private Application application = new Application();
 	

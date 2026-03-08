@@ -1,41 +1,40 @@
 package com.saurabh.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.saurabh.entity.Job;
-import com.saurabh.repository.jobRepository;
+import com.saurabh.repository.JobRepository;
 
 //spring business service
 
 @Service
 public class JobService {
 	@Autowired
-	private jobRepository jobRepo;
+	private JobRepository jobRepository;
 
-	public List<Job> getAllJobs() {
-		List<Job> job = new ArrayList<>();
-		 jobRepo.findAll().forEach(job::add);
-		 return job;
-	}
+	private static final Logger logger = LoggerFactory.getLogger(JobService.class);
 
-	public Optional<Job> getJob(int id)
-	{
-	    return jobRepo.findById(id);
+	public Job createJob(Job job) {
+
+		logger.info("Creating new job with title: {}", job.getTitle());
+
+		return jobRepository.save(job);
 	}
 	
-	public void addJob(Job job)
-	{
-		
-		jobRepo.save(job);
-	}
 	
-	public void deleteJob(int id)
-	{
-		jobRepo.deleteById(id);
+	public Job getJob(Long id){
+
+	    logger.debug("Fetching job with id {}", id);
+
+	    Job job = jobRepository.findById(id)
+	            .orElseThrow(() -> {
+
+	                logger.error("Job not found with id {}", id);
+	                return new RuntimeException("Job not found");
+	            });
+
+	    return job;
 	}
 }

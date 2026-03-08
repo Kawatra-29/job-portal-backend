@@ -1,4 +1,4 @@
-package com.saurabh.entity;
+package com.saurabh.DTOs;
 
 import java.time.LocalDate;
 import com.saurabh.entity.Application.ApplicationStatus;
