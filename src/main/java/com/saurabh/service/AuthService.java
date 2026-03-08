@@ -37,7 +37,6 @@ public class AuthService {
 	@Transactional
 	public AuthResponseDto Login(AuthRequestDto authRequestDto) {
 
-		System.out.println("REQUEST PAHUCH GYI SERVICE TAK .......");
 		var authToken = new UsernamePasswordAuthenticationToken(authRequestDto.email(), authRequestDto.password());
 		
 		var authenticate = authenticationManager.authenticate(authToken);
