@@ -1,61 +1,79 @@
-package com.saurabh.entity;
+package com.saurabh.Entity;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+//import java.util.Collection;
+//import java.util.List;
+//import org.jspecify.annotations.Nullable;
+//import org.springframework.security.core.GrantedAuthority;
+//import org.springframework.security.core.authority.SimpleGrantedAuthority;
+//import org.springframework.security.core.userdetails.UserDetails;
 import com.saurabh.ENUMS.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
 
+@SuppressWarnings("serial")
 @Entity
 @Table(name = "users", indexes = {
-	    @Index(name = "idx_email", columnList = "email"),
-	    @Index(name = "idx_location", columnList = "location")
+	    @Index(name = "idx_email", columnList = "email")
 	})
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Getter
 @Setter
-@SuppressWarnings("serial")
 public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
-    private String password;
+    private String passwordHash;
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    private String fullName;
+
+    private String phone;
+
+//    private String profilePictureUrl;
+//
+//    private Boolean isVerified;
+//
+//    private Boolean isActive;
     
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
-    
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private Candidate candidate;
-
 	@Override
 	public @Nullable String getPassword() {
-		// TODO Auto-generated method stub
-		return password;
-	}
-
-	@Override
-	public String getUsername() {
-		// TODO Auto-generated method stub
-		return email;
+		return passwordHash;
 	}
 
 }

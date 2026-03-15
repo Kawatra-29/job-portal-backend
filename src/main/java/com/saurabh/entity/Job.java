@@ -1,8 +1,14 @@
-package com.saurabh.entity;
+package com.saurabh.Entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
+
+import com.saurabh.ENUMS.ExperienceLevel;
+import com.saurabh.ENUMS.JobStatus;
+import com.saurabh.ENUMS.JobType;
+import com.saurabh.ENUMS.WorkMode;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,29 +22,48 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
+@Table(name = "jobs")
 public class Job {
-    @Id
-    @GeneratedValue()
-    private long id;
-    @Column(nullable = false)
-	private String title; 
-	private String company;
-	private String location;
-	private String salrange;
-	private String type;
-	private String skillRequired;
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+
+	@ManyToOne
+	@JoinColumn(name = "employer_id")
+	private Employer employer;
+
+	private String title;
+
 	private String description;
-	private LocalDate postDate;
-	private LocalDate applyLastDate;
-	@Builder.Default
-	@OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<Application> applications = new ArrayList<>();
-	
-	public void addApplication(Application app)
-	{
-		this.applications.add(app);
-		app.setJob(this); /// double check for database entry
-	}
-	
+
+	private String requirements;
+
+	private String responsibilities;
+
+	@Enumerated(EnumType.STRING)
+	private JobType jobType;
+
+	@Enumerated(EnumType.STRING)
+	private WorkMode workMode;
+
+	private String location;
+
+	private BigDecimal salaryMin;
+
+	private BigDecimal salaryMax;
+
+	private String currency;
+
+	@Enumerated(EnumType.STRING)
+	private ExperienceLevel experienceLevel;
+
+	@Enumerated(EnumType.STRING)
+	private JobStatus status;
+
+	private LocalDate deadline;
+
+	@OneToMany(mappedBy = "job")
+	private List<Application> applications;
+
 }

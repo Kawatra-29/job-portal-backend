@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.saurabh.DTOs.AuthRequestDto;
 import com.saurabh.DTOs.AuthResponseDto;
+import com.saurabh.DTOs.LoginDto;
 import com.saurabh.ENUMS.AuthStatus;
 import com.saurabh.service.AuthService;
 
@@ -22,10 +23,10 @@ public class AuthController {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<AuthResponseDto> Login(@RequestBody AuthRequestDto authRequestdto) {
+	public ResponseEntity<AuthResponseDto> Login(@RequestBody LoginDto loginDto) {
 
 		try {
-			var authResponseDto = authService.Login(authRequestdto);
+			var authResponseDto = authService.Login(loginDto);
 
 			return ResponseEntity.status(HttpStatus.OK).body(authResponseDto);
 		} catch (Exception e) {

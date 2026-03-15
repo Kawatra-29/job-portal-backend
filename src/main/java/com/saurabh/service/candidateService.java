@@ -7,8 +7,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import com.saurabh.entity.Candidate;
-import com.saurabh.entity.User;
+import com.saurabh.Entity.Candidate;
+import com.saurabh.Entity.User;
 import com.saurabh.repository.candidateRepository;
 
 

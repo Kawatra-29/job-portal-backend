@@ -1,7 +1,8 @@
 package com.saurabh.DTOs;
 
 import java.time.LocalDate;
-import com.saurabh.entity.Application.ApplicationStatus;
+
+import com.saurabh.ENUMS.ApplicationStatus;
 import jakarta.persistence.Id;
 
 

@@ -1,4 +1,4 @@
-package com.saurabh.entity;
+package com.saurabh.Entity;
 
 
 import java.util.List;

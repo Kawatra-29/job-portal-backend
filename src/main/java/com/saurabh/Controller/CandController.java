@@ -12,8 +12,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.saurabh.entity.Candidate;
-import com.saurabh.entity.User;
+
+import com.saurabh.Entity.Candidate;
+import com.saurabh.Entity.User;
 import com.saurabh.repository.candidateRepository;
 import com.saurabh.service.candidateService;
 
@@ -44,12 +45,12 @@ public class CandController {
 		candidateService.getCandidateById(id);
 	}
 	
-	@PreAuthorize("hasRole('ADMIN')")
-	@GetMapping("/{id}")
-	public void deleteJob(@PathVariable int id) {
-		candidateService.deleteCandidate(id);
-	}
-	
+//	@PreAuthorize("hasRole('ADMIN')")
+//	@GetMapping("/{id}")
+//	public void deleteJob(@PathVariable int id) {
+//		candidateService.deleteCandidate(id);
+//	}
+//	
 	
 	@PutMapping("/profile")
 	public ResponseEntity<Candidate> update(@RequestBody Candidate candidate) {

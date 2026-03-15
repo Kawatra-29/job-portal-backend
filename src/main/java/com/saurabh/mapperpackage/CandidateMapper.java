@@ -3,7 +3,7 @@ package com.saurabh.mapperpackage;
 import org.mapstruct.Mapper;
 
 import com.saurabh.DTOs.*;
-import com.saurabh.entity.Candidate;
+import com.saurabh.Entity.Candidate;
 
 @Mapper(componentModel = "spring")
 public interface CandidateMapper {
