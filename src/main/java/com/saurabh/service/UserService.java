@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.saurabh.DTOs.PasswordRequestDto;
+import com.saurabh.DTOs.UserResponseDTO;
 import com.saurabh.Entity.User;
 import com.saurabh.repository.UserRepository;
 
@@ -25,12 +27,21 @@ public class UserService {
     }
 
 	
-	public User getProfile(UserDetails userDetails) {
-		String email = userDetails.getUsername();
+    public UserResponseDTO getProfile(UserDetails userDetails) {
 
-	    return userRepository.findByEmail(email)
-	            .orElseThrow();
-	}
+        String email = userDetails.getUsername();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return new UserResponseDTO(
+                user.getId(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getPhone(),
+                user.getRole().name()
+        );
+    }
 
 	public User updateUser(User user, UserDetails userDetails) {
 		String email = userDetails.getUsername();
@@ -41,22 +52,22 @@ public class UserService {
 	    user1.setPhone(user.getPhone());
 	    user1.setFullName(user.getFullName());
 	    
-		return userRepository.save(user);
+		return userRepository.save(user1);
 	}
 	
-	public User updatePass(String password, UserDetails userDetails) {
+	public User updatePass(PasswordRequestDto password, UserDetails userDetails) {
 		 String email = userDetails.getUsername();
 
 	      User user = userRepository.findByEmail(email)
 	                .orElseThrow(() -> new RuntimeException("User not found"));
 		
 	      // check current password
-	        if (!passwordEncoder.matches(password, user.getPassword())) {
+	        if (!passwordEncoder.matches(password.oldPassword(), user.getPassword())) {
 	            throw new RuntimeException("Current password is incorrect");
 	        }
 
 	        // set new password
-	        user.setPasswordHash(passwordEncoder.encode(password));
+	        user.setPasswordHash(passwordEncoder.encode(password.newPassword()));
 
 	         return userRepository.save(user);
 		

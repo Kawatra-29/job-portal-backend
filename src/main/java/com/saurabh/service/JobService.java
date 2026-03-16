@@ -28,22 +28,14 @@ public class JobService {
 
 		String email = userDetails.getUsername();
 
-		Employer employer = employerRepository.findByEmail(email);
-		
-		Job job = Job.builder()
-		        .employer(employer)
-		        .title(request.title())
-		        .description(request.description())
-		        .requirements(request.requirements())
-		        .responsibilities(request.responsibilities())
-		        .jobType(request.jobType())
-		        .workMode(request.workMode())
-		        .location(request.location())
-		        .salaryMin(request.salaryMin())
-		        .experienceLevel(request.experienceLevel())
-		        .deadline(request.deadline())
-		        .status(JobStatus.OPEN)   // important
-		        .build();
+		Employer employer = employerRepository.findByUser_Email(email).orElseThrow();
+
+		Job job = Job.builder().employer(employer).title(request.title()).description(request.description())
+				.requirements(request.requirements()).responsibilities(request.responsibilities())
+				.jobType(request.jobType()).workMode(request.workMode()).location(request.location())
+				.salaryMin(request.salaryMin()).experienceLevel(request.experienceLevel()).deadline(request.deadline())
+				.status(JobStatus.OPEN) // important
+				.build();
 
 		logger.info("Creating new job with title: {}", job.getTitle());
 
@@ -62,4 +54,41 @@ public class JobService {
 
 		return job;
 	}
+
+	public void updatejob(Long id, JobRequestDto request, UserDetails userDetails) {
+
+		String email = userDetails.getUsername();
+
+		Employer employer = employerRepository.findByUser_Email(email).orElseThrow();
+
+		Job job = jobRepository.findById(id).orElseThrow(() -> new RuntimeException("Job not found"));
+
+		// security check
+		if (!job.getEmployer().getId().equals(employer.getId())) {
+			throw new RuntimeException("You cannot update this job");
+		}
+
+		job.setTitle(request.title());
+		job.setDescription(request.description());
+		job.setDeadline(request.deadline());
+		job.setLocation(request.location());
+		job.setRequirements(request.requirements());
+
+		jobRepository.save(job);
+	}
+
+	public void deleteJob(Long id, UserDetails userDetails) {
+		String email = userDetails.getUsername();
+
+		Employer employer = employerRepository.findByUser_Email(email).orElseThrow();
+
+		Job job = jobRepository.findById(id).orElseThrow(() -> new RuntimeException("Job not found"));
+
+		// security check
+		if (!job.getEmployer().getId().equals(employer.getId())) {
+			throw new RuntimeException("You cannot delete this job");
+		}
+		jobRepository.delete(job);
+	}
+
 }

@@ -1,7 +1,6 @@
 package com.saurabh.Controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -12,34 +11,34 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import com.saurabh.DTOs.PasswordRequestDto;
+import com.saurabh.DTOs.UserResponseDTO;
 import com.saurabh.Entity.User;
 import com.saurabh.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/users")
 public class UserController {
 
 	@Autowired
 	private UserService userService;
 
-	@GetMapping("/users/check")
+	@GetMapping("/check")
 	@SecurityRequirement(name = "bearerAuth")
 	public String checkPrincipal(Authentication authentication) {
 	    return authentication.getPrincipal().getClass().getName();
 	}
 	
-	@GetMapping("/users/me")
+	@GetMapping("/me")
 	@PreAuthorize("hasRole('JOBSEEKER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public User getUser(@AuthenticationPrincipal UserDetails userDetails) {
+	public UserResponseDTO getUser(@AuthenticationPrincipal UserDetails userDetails) {
 	       return userService.getProfile(userDetails);
 	}
 
-	@PutMapping("/users/me")
+	@PutMapping("/me")
 	@SecurityRequirement(name = "bearerAuth")
 	@PreAuthorize("hasRole('JOBSEEKER')")
     public ResponseEntity<User> updateUser(@RequestBody User user,@AuthenticationPrincipal UserDetails userDetails) {
@@ -49,15 +48,15 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 	
-	@GetMapping("/users/password")
+	@PutMapping("/password")
 	@PreAuthorize("hasRole('JOBSEEKER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public User updatePass(String password ,@AuthenticationPrincipal UserDetails userDetails) {
+	public User updatePass(PasswordRequestDto password ,@AuthenticationPrincipal UserDetails userDetails) {
 	       return userService.updatePass(password, userDetails);
 	}
 	
 	
-	@DeleteMapping("/users/me")
+	@DeleteMapping("/me")
 	@PreAuthorize("hasRole('JOBSEEKER')")
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<String> deleteUser(@AuthenticationPrincipal UserDetails userDetails) {
@@ -65,21 +64,7 @@ public class UserController {
 	    userService.deleteUser(userDetails.getUsername());
 
 	    return ResponseEntity.ok("User deleted successfully");
-	}
-	
-	
-	@GetMapping("admin/users")
-	@PreAuthorize("hasRole('ADMIN')")
-	@SecurityRequirement(name = "bearerAuth")
-	public Page<User> getAllUsers(
-	        @RequestParam(defaultValue = "0") int page,
-	        @RequestParam(defaultValue = "10") int size) {
-
-	    return userService.getAllUsers(page, size);
-	}
-	
-	
-	
+	}	
 	
 	
 }

@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import com.saurabh.Entity.User;
@@ -14,10 +16,19 @@ import com.saurabh.Entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+
 @Component
+@ConfigurationProperties(prefix = "jwt")
 public class JwtUtils {
 
-	private static final SecretKey secretKey = Jwts.SIG.HS256.key().build();
+	@Value("${jwt.secret}")
+	private static SecretKey secretKey;
+
+	@Value("${jwt.expiration}")
+	private long jwtExpiration;
+	
+	
+	
 	private static final String ISSUER = "SAURABH KAWATRA";
 
 	public boolean validateToken(String jwtToken) {
@@ -44,15 +55,9 @@ public class JwtUtils {
 	public static String generateToken(User user) {
 		Instant now = Instant.now();
 
-		return Jwts.builder()
-				.id(UUID.randomUUID().toString())
-				.claim("role","ROLE_" + user.getRole().name())
-				.issuer(ISSUER)
-				.subject(user.getEmail())
-				.issuedAt(Date.from(now))
-				.expiration(Date.from(now.plus(10, ChronoUnit.MINUTES)))
-				.signWith(secretKey)
-				.compact();
+		return Jwts.builder().id(UUID.randomUUID().toString()).claim("role", "ROLE_" + user.getRole().name())
+				.issuer(ISSUER).subject(user.getEmail()).issuedAt(Date.from(now))
+				.expiration(Date.from(now.plus(10, ChronoUnit.MINUTES))).signWith(secretKey).compact();
 	}
 
 }

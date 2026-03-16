@@ -13,7 +13,7 @@ import com.saurabh.ENUMS.AuthStatus;
 import com.saurabh.service.AuthService;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
 	private final AuthService authService;
@@ -54,3 +54,32 @@ public class AuthController {
 		}
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//| `POST` | `/auth/register` | Register new user (seeker or employer) | Public |
+//| `POST` | `/auth/login` | Login and receive JWT access + refresh tokens | Public |
+//| `POST` | `/auth/refresh` | Exchange refresh token for new access token | Public |
+//| `POST` | `/auth/logout` | Invalidate refresh token | User |
+//| `POST` | `/auth/forgot-password` | Send password reset email | Public |
+//| `POST` | `/auth/reset-password` | Reset password using emailed token | Public |
+//| `GET` | `/auth/verify-email` | Verify email address via token link | Public |

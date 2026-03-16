@@ -1,5 +1,7 @@
 package com.saurabh.service;
 
+import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,6 +18,7 @@ import com.saurabh.Entity.JobSeeker;
 import com.saurabh.Entity.JobSeekerSkill;
 import com.saurabh.Entity.Skill;
 import com.saurabh.Entity.User;
+import com.saurabh.repository.JobSeekerSkillRepository;
 import com.saurabh.repository.JobseekerRepository;
 import com.saurabh.repository.SkillRepository;
 import com.saurabh.repository.UserRepository;
@@ -30,6 +33,9 @@ public class JobSeekerService {
 
 	@Autowired
 	private SkillRepository skillRepository;
+	
+	@Autowired
+	private JobSeekerSkillRepository jobSeekerSkillRepository;
 
 	public ResponseEntity<JobSeekerResponseDTO> getProfile(UserDetails userDetails) {
 
@@ -38,7 +44,8 @@ public class JobSeekerService {
 
 		JobSeeker profile =  jobseekerRepository.findByUser(user).orElseThrow(() -> new RuntimeException("Profile not found"));
 		
-		Set<SkillResponseDto> skills = profile.getSkills()
+		Set<SkillResponseDto> skills = Optional.ofNullable(profile.getSkills())
+		        .orElse(Collections.emptySet())
 		        .stream()
 		        .map(jsSkill -> new SkillResponseDto(
 		                jsSkill.getSkill().getName(),
@@ -61,14 +68,12 @@ public class JobSeekerService {
 		        profile.getLocation(),
 		        profile.getYearsOfExperience(),
 		        profile.getExpectedSalary(),
-		        profile.getAvailability().name(),
+		        profile.getAvailability() != null ? profile.getAvailability().name() : null,
 		        skills,
 		        userDto
 		);
 		
-		return ResponseEntity.ok(response);
-		
-		
+		return ResponseEntity.ok(response);	
 		
 	}
 
@@ -117,6 +122,45 @@ public class JobSeekerService {
 				.map(jsSkill -> new SkillResponseDto(jsSkill.getSkill().getName(), jsSkill.getProficiencyLevel()))
 				.collect(Collectors.toSet());
 
+	}
+
+	public void addSkill(String skillName, UserDetails userDetails) {
+
+	    String email = userDetails.getUsername();
+
+	    JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(email);
+
+	    Skill skill = skillRepository.findByName(skillName);
+	    boolean exists = jobSeekerSkillRepository
+	            .existsByJobSeekerAndSkill(jobSeeker, skill);
+
+	    if(exists){
+	        throw new RuntimeException("Skill already added");
+	    }
+
+	    JobSeekerSkill jobSeekerSkill = JobSeekerSkill.builder()
+	            .jobSeeker(jobSeeker)
+	            .skill(skill)
+	            .build();
+
+	    jobSeekerSkillRepository.save(jobSeekerSkill);
+	}
+
+	public void removeSkill(Long skillId, UserDetails userDetails) {
+
+	    String email = userDetails.getUsername();
+
+	    JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(email);
+
+	    Skill skill = skillRepository.findById(skillId)
+	            .orElseThrow(() -> new RuntimeException("Skill not found"));
+
+	    JobSeekerSkill jobSeekerSkill =
+	            jobSeekerSkillRepository
+	            .findByJobSeekerAndSkill(jobSeeker, skill)
+	            .orElseThrow(() -> new RuntimeException("Skill not assigned"));
+
+	    jobSeekerSkillRepository.delete(jobSeekerSkill);
 	}
 
 }

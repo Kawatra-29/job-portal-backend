@@ -3,19 +3,23 @@ package com.saurabh.service;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.saurabh.DTOs.AuthRequestDto;
 import com.saurabh.DTOs.AuthResponseDto;
 import com.saurabh.DTOs.LoginDto;
 import com.saurabh.ENUMS.AuthStatus;
 import com.saurabh.ENUMS.Role;
+import com.saurabh.Entity.Employer;
 import com.saurabh.Entity.JobSeeker;
 import com.saurabh.Entity.User;
+import com.saurabh.repository.EmployerRepository;
 import com.saurabh.repository.JobseekerRepository;
 import com.saurabh.repository.UserRepository;
 import com.saurabh.util.JwtUtils;
@@ -26,6 +30,8 @@ public class AuthService {
 
 	@Autowired
     private JobseekerRepository jobseekerRepository;
+	@Autowired
+	private EmployerRepository employerRepository;
 	private PasswordEncoder passwordEncoder;
 	private UserRepository userRepository;
 	private AuthenticationManager authenticationManager;
@@ -68,7 +74,7 @@ public class AuthService {
 		}
 		
 		if (request.role() == Role.ADMIN) {
-		    throw new RuntimeException("You cannot register as ADMIN");
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid role");
 		}
 
 		// 2️⃣ Decide Role
@@ -90,14 +96,18 @@ public class AuthService {
 		// 4️⃣ If Candidate → Create Candidate Profile
 		if (assignedRole == Role.JOBSEEKER) {
 			
-			JobSeeker jobSeekerProfile = JobSeeker.builder()
+			JobSeeker jobSeeker = JobSeeker.builder()
 					.user(user)
 					.build();
 			
-			jobseekerRepository.save(jobSeekerProfile);
+			jobseekerRepository.save(jobSeeker);
 		}
 		else{
 			// EMPLOYER 
+			Employer employer = Employer.builder()
+					.user(user)
+					.build();	
+			employerRepository.save(employer);
 			
 		}
 		// 5 Generate Token

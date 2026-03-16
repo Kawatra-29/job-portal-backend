@@ -10,9 +10,11 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,7 +28,7 @@ import com.saurabh.service.JobService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 public class JobController {
 
 	// @Autowired // to inject jobservice bean into this class(DI)
@@ -62,6 +64,26 @@ public class JobController {
 		return ResponseEntity.ok(job);
 
 	}
+
+	@PutMapping("/jobs/{id}")
+	@PreAuthorize("hasRole('EMPLOYER')")
+	@SecurityRequirement(name = "bearerAuth")
+	public ResponseEntity<?> updateJobById(@PathVariable Long id, @RequestBody JobRequestDto request,
+			@AuthenticationPrincipal UserDetails userDetails) {
+		jobService.updatejob(id, request, userDetails);
+
+		return ResponseEntity.ok().build();
+	}
+
+	@DeleteMapping("/jobs/{id}")
+	@PreAuthorize("hasRole('EMPLOYER')")
+	@SecurityRequirement(name = "bearerAuth")
+	public ResponseEntity<?> deleteJob(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+		jobService.deleteJob(id, userDetails);
+		
+		return ResponseEntity.noContent().build();
+	}
+
 }
 
 //| `GET` | `/jobs` | Search and list jobs (filters, pagination, sort) | Public |

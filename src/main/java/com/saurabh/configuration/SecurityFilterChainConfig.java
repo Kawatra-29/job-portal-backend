@@ -26,28 +26,20 @@ public class SecurityFilterChainConfig {
 	@Bean
 	SecurityFilterChain SecurityFilterChain(HttpSecurity httpSecurity) throws Exception {
 		// desable cors
-		httpSecurity.cors(CorsConfig -> CorsConfig.disable());
+//		httpSecurity.cors(CorsConfig -> CorsConfig.disable());
 		// disable csrf
 		httpSecurity.csrf(CorsConfig -> CorsConfig.disable());
 
-		httpSecurity.authorizeHttpRequests(auth -> auth
-		        .requestMatchers("/api/auth/**").permitAll()
-		        .requestMatchers("/h2-console/**").permitAll()
-		        .requestMatchers(
-		                "/swagger-ui/**",
-		                "/v3/api-docs/**",
-		                "/swagger-ui.html"
-		        ).permitAll()
+		httpSecurity.authorizeHttpRequests(
+				auth -> auth.requestMatchers("/api/v1/auth/**").permitAll().requestMatchers("/h2-console/**").permitAll()
+						.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
-		        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-		        .requestMatchers("/api/employer/**").hasRole("EMPLOYER")
-		        .requestMatchers("/api/candidate/**").hasRole("CANDIDATE")
+						.requestMatchers("/api/admin/**").hasRole("ADMIN").requestMatchers("/api/v1/employer/**")
+						.hasRole("EMPLOYER").requestMatchers("/api/v1/jobseeker**").hasRole("JOBSEEKER")
 
-		        .anyRequest().authenticated()
-		);
-		
+						.anyRequest().authenticated());
+
 		httpSecurity.headers(headers -> headers.frameOptions(frame -> frame.disable()));
-		
 
 		// Authentication entry point -> exception hndler
 
@@ -56,12 +48,8 @@ public class SecurityFilterChainConfig {
 		httpSecurity.sessionManagement(
 				SessionConfig -> SessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-		
-		
-		
 		/// ADD JWT AUTHENTICATION FILTER
 		httpSecurity.addFilterBefore(jwtAuthenticationfilter, UsernamePasswordAuthenticationFilter.class);
-		
 
 		return httpSecurity.build();
 	}

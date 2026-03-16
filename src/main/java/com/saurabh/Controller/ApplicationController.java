@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import com.saurabh.service.ApplicationService;
 
 @RestController
-@RequestMapping("/jobs")
+@RequestMapping("/api/v1/applications")
 public class ApplicationController {
 
 	@Autowired

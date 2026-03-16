@@ -13,4 +13,6 @@ import com.saurabh.Entity.User;
 public interface JobseekerRepository extends JpaRepository<JobSeeker, Long> {
 	
 	Optional<JobSeeker> findByUser(User user);
+
+	JobSeeker findByUser_Email(String email);
 }
