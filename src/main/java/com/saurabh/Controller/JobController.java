@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.saurabh.DTOs.JobRequestDto;
+import com.saurabh.ENUMS.JobStatus;
 import com.saurabh.Entity.Job;
 import com.saurabh.repository.JobRepository;
 import com.saurabh.service.JobService;
@@ -82,6 +84,15 @@ public class JobController {
 		jobService.deleteJob(id, userDetails);
 		
 		return ResponseEntity.noContent().build();
+	}
+	@PatchMapping("/jobs/{id}/status")
+	@PreAuthorize("hasRole('EMPLOYER')")
+	@SecurityRequirement(name = "bearerAuth")
+	public ResponseEntity<?> updateJobStatus(@PathVariable Long id,
+	        @RequestParam JobStatus status,
+	        @AuthenticationPrincipal UserDetails userDetails) {
+	    jobService.updateStatus(id, status, userDetails);
+	    return ResponseEntity.ok("Job status updated");
 	}
 
 }

@@ -6,12 +6,13 @@ import java.time.LocalDateTime;
 import com.saurabh.ENUMS.ApplicationStatus;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 @Entity
 @Data
 @Builder
+@NoArgsConstructor   // ← add
+@AllArgsConstructor
 public class Application {
 	
 	@Id

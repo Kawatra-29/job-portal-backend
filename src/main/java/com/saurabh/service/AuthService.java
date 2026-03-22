@@ -29,19 +29,24 @@ import jakarta.transaction.Transactional;
 public class AuthService {
 
 	@Autowired
-    private JobseekerRepository jobseekerRepository;
+	private JobseekerRepository jobseekerRepository;
 	@Autowired
 	private EmployerRepository employerRepository;
+
+	@Autowired
+	private JwtUtils jwtUtils;
 	private PasswordEncoder passwordEncoder;
 	private UserRepository userRepository;
 	private AuthenticationManager authenticationManager;
-	
 
-	public AuthService(PasswordEncoder passwordEncoder,
-			UserRepository userRepository, AuthenticationManager authenticationManager, JobseekerRepository jobseekerRepository, UserDetailsServiceImpl userDetailsServiceImpl) {
+	public AuthService(JobseekerRepository jobseekerRepository, EmployerRepository employerRepository,
+			JwtUtils jwtUtils, PasswordEncoder passwordEncoder, UserRepository userRepository,
+			AuthenticationManager authenticationManager) {
 		super();
-		this.passwordEncoder = passwordEncoder;
 		this.jobseekerRepository = jobseekerRepository;
+		this.employerRepository = employerRepository;
+		this.jwtUtils = jwtUtils;
+		this.passwordEncoder = passwordEncoder;
 		this.userRepository = userRepository;
 		this.authenticationManager = authenticationManager;
 	}
@@ -50,16 +55,14 @@ public class AuthService {
 	public AuthResponseDto Login(LoginDto loginDto) {
 
 		var authToken = new UsernamePasswordAuthenticationToken(loginDto.email(), loginDto.password());
-		
-		var authenticate = authenticationManager.authenticate(authToken);
-		
-		
-		UserDetails userDetails = (UserDetails) authenticate.getPrincipal();
-		
-		User user = userRepository.findByEmail(userDetails.getUsername())
-		        .orElseThrow();
 
-		String token = JwtUtils.generateToken(user);
+		var authenticate = authenticationManager.authenticate(authToken);
+
+		UserDetails userDetails = (UserDetails) authenticate.getPrincipal();
+
+		User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+
+		String token = jwtUtils.generateToken(user);
 
 		return new AuthResponseDto(token, AuthStatus.LOGIN_SUCCESS);
 	}
@@ -72,14 +75,13 @@ public class AuthService {
 		if (userRepository.existsByEmail(request.email())) {
 			return new AuthResponseDto(null, AuthStatus.USER_ALREADY_EXISTS);
 		}
-		
+
 		if (request.role() == Role.ADMIN) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid role");
 		}
 
 		// 2️⃣ Decide Role
 		Role assignedRole;
-		
 
 		if (request.role() == Role.EMPLOYER) {
 			assignedRole = Role.EMPLOYER;
@@ -88,30 +90,26 @@ public class AuthService {
 		}
 
 		// 3️⃣ Create User
-		User user = User.builder().fullName(request.fname()).email(request.email()).createdAt(LocalDateTime.now()).phone(request.phone()).updatedAt(LocalDateTime.now())
+		User user = User.builder().fullName(request.fname()).email(request.email()).createdAt(LocalDateTime.now())
+				.phone(request.phone()).updatedAt(LocalDateTime.now())
 				.passwordHash(passwordEncoder.encode(request.password())).role(assignedRole).build();
-		
+
 		userRepository.save(user);
 
 		// 4️⃣ If Candidate → Create Candidate Profile
 		if (assignedRole == Role.JOBSEEKER) {
-			
-			JobSeeker jobSeeker = JobSeeker.builder()
-					.user(user)
-					.build();
-			
+
+			JobSeeker jobSeeker = JobSeeker.builder().user(user).build();
+
 			jobseekerRepository.save(jobSeeker);
-		}
-		else{
-			// EMPLOYER 
-			Employer employer = Employer.builder()
-					.user(user)
-					.build();	
+		} else {
+			// EMPLOYER
+			Employer employer = Employer.builder().user(user).build();
 			employerRepository.save(employer);
-			
+
 		}
 		// 5 Generate Token
-		String token = JwtUtils.generateToken(user);
+		String token = jwtUtils.generateToken(user);
 
 		return new AuthResponseDto(token, AuthStatus.USER_CREATED_SUCCESSFULLY);
 	}

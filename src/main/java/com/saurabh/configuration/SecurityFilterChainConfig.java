@@ -33,9 +33,11 @@ public class SecurityFilterChainConfig {
 		httpSecurity.authorizeHttpRequests(
 				auth -> auth.requestMatchers("/api/v1/auth/**").permitAll().requestMatchers("/h2-console/**").permitAll()
 						.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-
-						.requestMatchers("/api/admin/**").hasRole("ADMIN").requestMatchers("/api/v1/employer/**")
-						.hasRole("EMPLOYER").requestMatchers("/api/v1/jobseeker**").hasRole("JOBSEEKER")
+						.requestMatchers("/api/v1/employer/**")
+						.hasRole("EMPLOYER")
+						
+						.requestMatchers("/api/v1/jobseekers/**").hasRole("JOBSEEKER") // jobseeker** → jobseekers/**
+						.requestMatchers("/api/v1/admin/**").hasRole("ADMIN")           // /api/admin → /api/v1/admin
 
 						.anyRequest().authenticated());
 

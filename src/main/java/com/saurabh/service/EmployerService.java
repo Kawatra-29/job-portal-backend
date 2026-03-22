@@ -66,4 +66,13 @@ public class EmployerService {
 
 	    return employerRepository.save(employer);
 	}
+
+
+	public void verifyEmployer(Long id) {
+	    Employer employer = employerRepository.findById(id)
+	            .orElseThrow(() -> new RuntimeException("Employer not found"));
+	    
+	    employer.setIsVerified(true);
+	    employerRepository.save(employer);
+	}
 }

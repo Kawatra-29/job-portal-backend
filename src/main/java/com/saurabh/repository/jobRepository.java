@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.saurabh.Entity.Job;
 
-public interface JobRepository extends JpaRepository<Job, Integer> {
+public interface JobRepository extends JpaRepository<Job, Long> {
 
 	public Optional<Job> findById(Long id);
 	

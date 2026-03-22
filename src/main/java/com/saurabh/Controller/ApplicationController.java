@@ -1,11 +1,19 @@
 package com.saurabh.Controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import com.saurabh.ENUMS.ApplicationStatus;
+import com.saurabh.Entity.Application;
 import com.saurabh.service.ApplicationService;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/api/v1/applications")
@@ -16,17 +24,42 @@ public class ApplicationController {
 
 	@PostMapping("/{jobId}/apply")
 	@PreAuthorize("hasRole('JOBSEEKER')")
-	public ResponseEntity<?> applyJob(@PathVariable Long jobId, UserDetails userDetails) {
+	public ResponseEntity<?> applyJob(@PathVariable Long jobId,@AuthenticationPrincipal UserDetails userDetails) {
 
 		applicationService.applyJob(jobId, userDetails);
 
 		return ResponseEntity.ok("Applied successfully");
 	}
+	
+	// Employer: application status update
+	@PatchMapping("/{id}/status")
+	@PreAuthorize("hasRole('EMPLOYER')")
+	@SecurityRequirement(name = "bearerAuth")
+	public ResponseEntity<?> updateStatus(
+	        @PathVariable Long id,
+	        @RequestParam ApplicationStatus status,
+	        @AuthenticationPrincipal UserDetails userDetails) {
+	    applicationService.updateStatus(id, status, userDetails);
+	    return ResponseEntity.ok("Status updated");
+	}
 
-//	@GetMapping("/{id}")
-//	public Optional<Application> getAppById(@PathVariable int id) {
-//		return appService.getAppById(id);
-//	}
+	// Jobseeker: apni applications dekho
+	@GetMapping("/my")
+	@PreAuthorize("hasRole('JOBSEEKER')")
+	@SecurityRequirement(name = "bearerAuth")
+	public List<Application> getMyApplications(@AuthenticationPrincipal UserDetails userDetails) {
+	    return applicationService.getMyApplications(userDetails);
+	}
+
+	// Jobseeker: application withdraw
+	@DeleteMapping("/{id}")
+	@PreAuthorize("hasRole('JOBSEEKER')")
+	@SecurityRequirement(name = "bearerAuth")
+	public ResponseEntity<?> withdraw(@PathVariable Long id,
+	        @AuthenticationPrincipal UserDetails userDetails) {
+	    applicationService.withdraw(id, userDetails);
+	    return ResponseEntity.noContent().build();
+	}
 }
 
 //| `POST` | `/jobs/{jobId}/apply` | Submit application for a job | Jobseeker |

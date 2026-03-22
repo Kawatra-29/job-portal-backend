@@ -8,7 +8,6 @@ import java.util.UUID;
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import com.saurabh.Entity.User;
@@ -16,48 +15,58 @@ import com.saurabh.Entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 
 @Component
-@ConfigurationProperties(prefix = "jwt")
 public class JwtUtils {
 
-	@Value("${jwt.secret}")
-	private static SecretKey secretKey;
+    @Value("${jwt.secret}")
+    private String secretKeyString;  // inject as String first
 
-	@Value("${jwt.expiration}")
-	private long jwtExpiration;
-	
-	
-	
-	private static final String ISSUER = "SAURABH KAWATRA";
+    @Value("${jwt.expiration}")
+    private long jwtExpiration;
 
-	public boolean validateToken(String jwtToken) {
-		return parseToken(jwtToken) != null;
-	}
+    private SecretKey secretKey;
 
-	private static Claims parseToken(String jwtToken) {
-		var jwtParser = Jwts.parser().verifyWith(secretKey).build();
+    @PostConstruct
+    public void init() {
+        byte[] keyBytes = Decoders.BASE64.decode(secretKeyString);
+        this.secretKey = Keys.hmacShaKeyFor(keyBytes);
+    }
 
-		try {
-			return jwtParser.parseSignedClaims(jwtToken).getPayload();
-		} catch (JwtException e) {
-			System.err.println("Invalid JWT: " + e.getMessage());
-		}
-		return null;
+    private static final String ISSUER = "SAURABH KAWATRA";
 
-	}
+    public boolean validateToken(String jwtToken) {
+        return parseToken(jwtToken) != null;
+    }
 
-	public String getUsernameFromToken(String jwtToken) {
-		Claims claims = parseToken(jwtToken);
-		return claims != null ? claims.getSubject() : null;
-	}
+    private Claims parseToken(String jwtToken) {  // no longer static
+        try {
+            return Jwts.parser().verifyWith(secretKey).build()
+                    .parseSignedClaims(jwtToken).getPayload();
+        } catch (JwtException e) {
+            System.err.println("Invalid JWT: " + e.getMessage());
+        }
+        return null;
+    }
 
-	public static String generateToken(User user) {
-		Instant now = Instant.now();
+    public String getUsernameFromToken(String jwtToken) {
+        Claims claims = parseToken(jwtToken);
+        return claims != null ? claims.getSubject() : null;
+    }
 
-		return Jwts.builder().id(UUID.randomUUID().toString()).claim("role", "ROLE_" + user.getRole().name())
-				.issuer(ISSUER).subject(user.getEmail()).issuedAt(Date.from(now))
-				.expiration(Date.from(now.plus(10, ChronoUnit.MINUTES))).signWith(secretKey).compact();
-	}
-
+    public String generateToken(User user) {  // no longer static
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .claim("role", "ROLE_" + user.getRole().name())
+                .issuer(ISSUER)
+                .subject(user.getEmail())
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plus(jwtExpiration, ChronoUnit.MINUTES)))
+                .signWith(secretKey)
+                .compact();
+    }
 }

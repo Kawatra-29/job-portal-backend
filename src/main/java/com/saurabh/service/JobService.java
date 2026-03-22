@@ -90,5 +90,15 @@ public class JobService {
 		}
 		jobRepository.delete(job);
 	}
+	
+	public void updateStatus(Long id, JobStatus status, UserDetails userDetails) {
+	    Employer employer = employerRepository.findByUser_Email(userDetails.getUsername()).orElseThrow();
+	    Job job = jobRepository.findById(id).orElseThrow(() -> new RuntimeException("Job not found"));
+	    if (!job.getEmployer().getId().equals(employer.getId())) {
+	        throw new RuntimeException("Unauthorized");
+	    }
+	    job.setStatus(status);
+	    jobRepository.save(job);
+	}
 
 }
