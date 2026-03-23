@@ -11,6 +11,7 @@ import com.saurabh.Entity.Job;
 
 public interface JobRepository extends JpaRepository<Job, Long> {
 
+	@SuppressWarnings("null")
 	public Optional<Job> findById(Long id);
 	
 	List<Job> findByEmployerId(Long employerId);
