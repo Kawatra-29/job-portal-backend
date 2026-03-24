@@ -1,10 +1,14 @@
 package com.saurabh.Entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Data
 @Table(name = "skills")
 public class Skill {
 

@@ -9,9 +9,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Builder
-@NoArgsConstructor   // ← add
+@NoArgsConstructor
 @AllArgsConstructor
 public class Application {
 	
