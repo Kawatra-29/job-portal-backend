@@ -23,8 +23,8 @@ public class SecurityFilterChainConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf(csrf -> csrf.disable());
+    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {  	
+    	httpSecurity.csrf(csrf -> csrf.disable());
 
         httpSecurity.authorizeHttpRequests(auth -> auth
                 // Public endpoints

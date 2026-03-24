@@ -9,19 +9,19 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CorsConfig {
 
-    @Bean
-    WebMvcConfigurer corsConfigurer() {
+	@Bean
+	WebMvcConfigurer corsConfigurer() {
 
-        return new WebMvcConfigurer() {
+		return new WebMvcConfigurer() {
 
 			@Override
-            public void addCorsMappings(@NonNull CorsRegistry registry) {
+			public void addCorsMappings(@NonNull CorsRegistry registry) {
 
-                registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:3000")
-                        .allowedMethods("*")
-                        .allowedHeaders("*");
-            }
-        };
-    }
+				registry.addMapping("/**")
+						.allowedOrigins("http://localhost:3000",
+								"https://job-portal-backend-production-1bc7.up.railway.app")
+						.allowedMethods("*").allowedHeaders("*");
+			}
+		};
+	}
 }
