@@ -67,6 +67,7 @@ public class AuthService {
 		return new AuthResponseDto(token, AuthStatus.LOGIN_SUCCESS);
 	}
 
+	@SuppressWarnings("null")
 	@Transactional // all database operation either success or rollback remain operations if any
 					// one operation is unsuccessfull
 	public AuthResponseDto signup(AuthRequestDto request) {

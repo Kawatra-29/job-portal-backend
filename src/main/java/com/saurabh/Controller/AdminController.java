@@ -19,38 +19,37 @@ import com.saurabh.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/api/v1/admin") // Fixed: was "/admin", didn't match SecurityFilterChain rule for "/api/v1/admin/**"
 public class AdminController {
 
-	@Autowired
-	private UserService userService;
-	
-	@Autowired
-	private EmployerService employerService;
-	
-	@GetMapping("/users")
-	@PreAuthorize("hasRole('ADMIN')")
-	@SecurityRequirement(name = "bearerAuth")
-	public Page<User> getAllUsers(
-	        @RequestParam(defaultValue = "0") int page,
-	        @RequestParam(defaultValue = "10") int size) {
+    @Autowired
+    private UserService userService;
 
-	    return userService.getAllUsers(page, size);
-	}
-	@DeleteMapping("/users/{email}")
-	@PreAuthorize("hasRole('ADMIN')")
-	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<String> deleteUser(@PathVariable String email) {
-	    userService.deleteUser(email);
-	    return ResponseEntity.ok("User deleted");
-	}
+    @Autowired
+    private EmployerService employerService;
 
-	@PostMapping("/employers/{id}/verify")
-	@PreAuthorize("hasRole('ADMIN')")
-	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<?> verifyEmployer(@PathVariable Long id) {
-	    employerService.verifyEmployer(id);
-	    return ResponseEntity.ok("Employer verified");
-	}
-	
+    @GetMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    public Page<User> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return userService.getAllUsers(page, size);
+    }
+
+    @DeleteMapping("/users/{email}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<String> deleteUser(@PathVariable String email) {
+        userService.deleteUser(email);
+        return ResponseEntity.ok("User deleted");
+    }
+
+    @PostMapping("/employers/{id}/verify")
+    @PreAuthorize("hasRole('ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<?> verifyEmployer(@PathVariable Long id) {
+        employerService.verifyEmployer(id);
+        return ResponseEntity.ok("Employer verified");
+    }
 }

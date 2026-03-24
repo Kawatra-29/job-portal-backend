@@ -13,47 +13,46 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class SecurityFilterChainConfig {
 
-	private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final JWTAuthenticationFilter jwtAuthenticationfilter;
 
-	private final JWTAuthenticationFilter jwtAuthenticationfilter;
+    public SecurityFilterChainConfig(AuthenticationEntryPoint authenticationEntryPoint,
+            JWTAuthenticationFilter jwtAuthenticationFilter) {
+        this.authenticationEntryPoint = authenticationEntryPoint;
+        this.jwtAuthenticationfilter = jwtAuthenticationFilter;
+    }
 
-	public SecurityFilterChainConfig(AuthenticationEntryPoint authenticationEntryPoint,
-			JWTAuthenticationFilter jwtAuthenticationFilter) {
-		this.authenticationEntryPoint = authenticationEntryPoint;
-		this.jwtAuthenticationfilter = jwtAuthenticationFilter;
-	}
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity.csrf(csrf -> csrf.disable());
 
-	@Bean
-	SecurityFilterChain SecurityFilterChain(HttpSecurity httpSecurity) throws Exception {
-		// desable cors
-//		httpSecurity.cors(CorsConfig -> CorsConfig.disable());
-		// disable csrf
-		httpSecurity.csrf(CorsConfig -> CorsConfig.disable());
+        httpSecurity.authorizeHttpRequests(auth -> auth
+                // Public endpoints
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/h2-console/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs", "/swagger-ui.html").permitAll()
+                .requestMatchers("/api/v1/skills").permitAll()
+                // Public job browsing (GET only — write operations protected by @PreAuthorize)
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/jobs", "/api/v1/jobs/**").permitAll()
+                // Role-scoped routes
+                .requestMatchers("/api/v1/employer/**").hasRole("EMPLOYER")
+                .requestMatchers("/api/v1/jobseekers/**").hasRole("JOBSEEKER")
+                // Fixed: was "/api/v1/admin/**" but AdminController was mapped to "/admin".
+                // Both are now aligned to "/api/v1/admin/**".
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+        );
 
-		httpSecurity.authorizeHttpRequests(
-				auth -> auth.requestMatchers("/api/v1/auth/**").permitAll().requestMatchers("/h2-console/**").permitAll()
-						.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-						.requestMatchers("/api/v1/employer/**")
-						.hasRole("EMPLOYER")
-						
-						.requestMatchers("/api/v1/jobseekers/**").hasRole("JOBSEEKER") // jobseeker** → jobseekers/**
-						.requestMatchers("/api/v1/admin/**").hasRole("ADMIN")           // /api/admin → /api/v1/admin
+        httpSecurity.headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
-						.anyRequest().authenticated());
+        httpSecurity.exceptionHandling(ex ->
+                ex.authenticationEntryPoint(authenticationEntryPoint));
 
-		httpSecurity.headers(headers -> headers.frameOptions(frame -> frame.disable()));
+        httpSecurity.sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-		// Authentication entry point -> exception hndler
+        httpSecurity.addFilterBefore(jwtAuthenticationfilter, UsernamePasswordAuthenticationFilter.class);
 
-		httpSecurity.exceptionHandling(
-				exceptionConfig -> exceptionConfig.authenticationEntryPoint(authenticationEntryPoint));
-		httpSecurity.sessionManagement(
-				SessionConfig -> SessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-		/// ADD JWT AUTHENTICATION FILTER
-		httpSecurity.addFilterBefore(jwtAuthenticationfilter, UsernamePasswordAuthenticationFilter.class);
-
-		return httpSecurity.build();
-	}
-
+        return httpSecurity.build();
+    }
 }

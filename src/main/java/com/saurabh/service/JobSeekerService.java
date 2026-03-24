@@ -93,6 +93,7 @@ public class JobSeekerService {
 		
 		Set<JobSeekerSkill> skills = jobSeekerDto.skills().stream().map(skillDto -> {
 
+			@SuppressWarnings("null")
 			Skill skill = skillRepository.findById(skillDto.skillId())
 					.orElseThrow(() -> new RuntimeException("Skill not found"));
 
@@ -124,6 +125,7 @@ public class JobSeekerService {
 
 	}
 
+	@SuppressWarnings("null")
 	public void addSkill(String skillName, UserDetails userDetails) {
 
 	    String email = userDetails.getUsername();
@@ -146,13 +148,14 @@ public class JobSeekerService {
 	    jobSeekerSkillRepository.save(jobSeekerSkill);
 	}
 
+	@SuppressWarnings("null")
 	public void removeSkill(Long skillId, UserDetails userDetails) {
 
 	    String email = userDetails.getUsername();
 
 	    JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(email);
 
-	    Skill skill = skillRepository.findById(skillId)
+		Skill skill = skillRepository.findById(skillId)
 	            .orElseThrow(() -> new RuntimeException("Skill not found"));
 
 	    JobSeekerSkill jobSeekerSkill =

@@ -53,7 +53,7 @@ public class JobController {
 	@GetMapping("/jobs/{id}")
 	public Optional<Job> getJobsById(@PathVariable long id) {
 
-		return jobRepository.findById(id);
+		return jobService.getJob(id);
 	}
 
 	@PostMapping("/jobs")

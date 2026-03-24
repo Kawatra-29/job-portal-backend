@@ -15,7 +15,6 @@ import com.saurabh.Entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 
@@ -32,8 +31,8 @@ public class JwtUtils {
 
     @PostConstruct
     public void init() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKeyString);
-        this.secretKey = Keys.hmacShaKeyFor(keyBytes);
+        //byte[] keyBytes = Decoders.BASE64.decode(secretKeyString);
+        this.secretKey =  Keys.hmacShaKeyFor(secretKeyString.getBytes());
     }
 
     private static final String ISSUER = "SAURABH KAWATRA";
@@ -42,14 +41,17 @@ public class JwtUtils {
         return parseToken(jwtToken) != null;
     }
 
-    private Claims parseToken(String jwtToken) {  // no longer static
+    private Claims parseToken(String jwtToken) {
         try {
-            return Jwts.parser().verifyWith(secretKey).build()
-                    .parseSignedClaims(jwtToken).getPayload();
+            return Jwts.parserBuilder()
+                    .setSigningKey(secretKey)  // secretKey should be of type SecretKey
+                    .build()
+                    .parseClaimsJws(jwtToken)
+                    .getBody();
+
         } catch (JwtException e) {
-            System.err.println("Invalid JWT: " + e.getMessage());
+            throw new RuntimeException("Invalid JWT token", e);
         }
-        return null;
     }
 
     public String getUsernameFromToken(String jwtToken) {
@@ -60,12 +62,13 @@ public class JwtUtils {
     public String generateToken(User user) {  // no longer static
         Instant now = Instant.now();
         return Jwts.builder()
-                .id(UUID.randomUUID().toString())
+        		
+                .setId(UUID.randomUUID().toString())
                 .claim("role", "ROLE_" + user.getRole().name())
-                .issuer(ISSUER)
-                .subject(user.getEmail())
-                .issuedAt(Date.from(now))
-                .expiration(Date.from(now.plus(jwtExpiration, ChronoUnit.MINUTES)))
+                .setIssuer(ISSUER)
+                .setSubject(user.getEmail())
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(now.plus(jwtExpiration, ChronoUnit.MINUTES)))
                 .signWith(secretKey)
                 .compact();
     }

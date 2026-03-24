@@ -24,6 +24,7 @@ public class ApplicationController {
 
 	@PostMapping("/{jobId}/apply")
 	@PreAuthorize("hasRole('JOBSEEKER')")
+	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<?> applyJob(@PathVariable Long jobId,@AuthenticationPrincipal UserDetails userDetails) {
 
 		applicationService.applyJob(jobId, userDetails);
@@ -32,6 +33,7 @@ public class ApplicationController {
 	}
 	
 	// Employer: application status update
+	@SuppressWarnings("null")
 	@PatchMapping("/{id}/status")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
@@ -52,6 +54,7 @@ public class ApplicationController {
 	}
 
 	// Jobseeker: application withdraw
+	@SuppressWarnings("null")
 	@DeleteMapping("/{id}")
 	@PreAuthorize("hasRole('JOBSEEKER')")
 	@SecurityRequirement(name = "bearerAuth")

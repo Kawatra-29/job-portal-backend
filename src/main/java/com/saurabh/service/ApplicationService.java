@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,7 @@ public class ApplicationService {
 	@Autowired
 	private EmployerRepository employerRepository;
 
+	@SuppressWarnings("null")
 	@Transactional
 	public void applyJob(Long jobId, UserDetails userDetails) {
 		Job job = jobRepository.findById(jobId).orElseThrow(() -> new RuntimeException("Job not found"));
@@ -59,7 +61,7 @@ public class ApplicationService {
 	
 	// Application status update
 	@Transactional
-	public void updateStatus(Long applicationId, ApplicationStatus newStatus, UserDetails userDetails) {
+	public void updateStatus(@NonNull Long applicationId, ApplicationStatus newStatus, UserDetails userDetails) {
 	    Application application = applicationRepository.findById(applicationId)
 	            .orElseThrow(() -> new RuntimeException("Application not found"));
 
@@ -82,7 +84,7 @@ public class ApplicationService {
 
 	// Application withdraw
 	@Transactional
-	public void withdraw(Long applicationId, UserDetails userDetails) {
+	public void withdraw(@NonNull Long applicationId, UserDetails userDetails) {
 	    Application application = applicationRepository.findById(applicationId)
 	            .orElseThrow(() -> new RuntimeException("Application not found"));
 	    JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername());

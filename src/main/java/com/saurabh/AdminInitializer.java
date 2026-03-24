@@ -18,7 +18,7 @@ public class AdminInitializer implements CommandLineRunner {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Override
+	@Override
     public void run(String... args) {
 
         if(userRepository.findByEmail("admin@gmail.com").isEmpty()) {

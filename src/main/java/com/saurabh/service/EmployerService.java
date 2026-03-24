@@ -68,6 +68,7 @@ public class EmployerService {
 	}
 
 
+	@SuppressWarnings("null")
 	public void verifyEmployer(Long id) {
 	    Employer employer = employerRepository.findById(id)
 	            .orElseThrow(() -> new RuntimeException("Employer not found"));

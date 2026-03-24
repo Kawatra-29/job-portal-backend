@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.saurabh.DTOs.JobSeekerDto;
@@ -61,7 +62,7 @@ public class JobSeekerController {
 	@PostMapping("/me/skills")
 	@SecurityRequirement(name = "bearerAuth")
 	@PreAuthorize("hasRole('JOBSEEKER')")
-	public ResponseEntity<?> addSkill(String request, @AuthenticationPrincipal UserDetails userDetails) {
+	public ResponseEntity<?> addSkill(@RequestParam String request, @AuthenticationPrincipal UserDetails userDetails) {
 
 		jobSeekerService.addSkill(request, userDetails);
 

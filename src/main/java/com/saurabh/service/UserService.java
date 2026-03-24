@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.saurabh.DTOs.PasswordRequestDto;
 import com.saurabh.DTOs.UserResponseDTO;
 import com.saurabh.Entity.User;
+import com.saurabh.exception.UserNotFoundException;
 import com.saurabh.repository.UserRepository;
 
 @Service
@@ -62,7 +63,7 @@ public class UserService {
 	                .orElseThrow(() -> new RuntimeException("User not found"));
 		
 	      // check current password
-	        if (!passwordEncoder.matches(password.oldPassword(), user.getPassword())) {
+	        if (!passwordEncoder.matches(password.oldPassword(), user.getPasswordHash())) {
 	            throw new RuntimeException("Current password is incorrect");
 	        }
 
@@ -74,14 +75,14 @@ public class UserService {
 	}
 
 
+	@SuppressWarnings("null")
 	public void deleteUser(String email) {
 
-	      User user = userRepository.findByEmail(email)
-	                .orElseThrow(() -> new RuntimeException("User not found"));
+	    User user = userRepository.findByEmail(email)
+	            .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
-		  userRepository.delete(user);
+	    userRepository.delete(user);
 	}
-
 
 	public Page<User> getAllUsers(int page, int size) {
 		 Pageable pageable = PageRequest.of(page, size);

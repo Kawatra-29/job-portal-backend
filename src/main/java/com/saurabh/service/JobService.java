@@ -3,6 +3,9 @@ package com.saurabh.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.saurabh.DTOs.JobRequestDto;
@@ -42,7 +45,7 @@ public class JobService {
 		return jobRepository.save(job);
 	}
 
-	public Job getJob(Long id) {
+	public Optional<Job> getJob(Long id) {
 
 		logger.debug("Fetching job with id {}", id);
 
@@ -52,7 +55,7 @@ public class JobService {
 			return new RuntimeException("Job not found");
 		});
 
-		return job;
+		return Optional.of(job);
 	}
 
 	public void updatejob(Long id, JobRequestDto request, UserDetails userDetails) {
