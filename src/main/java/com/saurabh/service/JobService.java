@@ -1,6 +1,7 @@
 package com.saurabh.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -45,7 +46,7 @@ public class JobService {
 		return jobRepository.save(job);
 	}
 
-	public Optional<Job> getJob(Long id) {
+	public Optional<Job> getJob(@NonNull Long id) {
 
 		logger.debug("Fetching job with id {}", id);
 
@@ -58,7 +59,7 @@ public class JobService {
 		return Optional.of(job);
 	}
 
-	public void updatejob(Long id, JobRequestDto request, UserDetails userDetails) {
+	public void updatejob(@NonNull Long id, JobRequestDto request, UserDetails userDetails) {
 
 		String email = userDetails.getUsername();
 
@@ -80,7 +81,7 @@ public class JobService {
 		jobRepository.save(job);
 	}
 
-	public void deleteJob(Long id, UserDetails userDetails) {
+	public void deleteJob(@NonNull Long id, UserDetails userDetails) {
 		String email = userDetails.getUsername();
 
 		Employer employer = employerRepository.findByUser_Email(email).orElseThrow();
@@ -94,7 +95,7 @@ public class JobService {
 		jobRepository.delete(job);
 	}
 	
-	public void updateStatus(Long id, JobStatus status, UserDetails userDetails) {
+	public void updateStatus(@NonNull Long id, JobStatus status, UserDetails userDetails) {
 	    Employer employer = employerRepository.findByUser_Email(userDetails.getUsername()).orElseThrow();
 	    Job job = jobRepository.findById(id).orElseThrow(() -> new RuntimeException("Job not found"));
 	    if (!job.getEmployer().getId().equals(employer.getId())) {

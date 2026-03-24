@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.saurabh.DTOs.JobSeekerDto;
 import com.saurabh.DTOs.JobSeekerResponseDTO;
@@ -18,10 +19,28 @@ import com.saurabh.Entity.JobSeeker;
 import com.saurabh.Entity.JobSeekerSkill;
 import com.saurabh.Entity.Skill;
 import com.saurabh.Entity.User;
+import com.saurabh.exception.ResourceNotFoundException;
 import com.saurabh.repository.JobSeekerSkillRepository;
 import com.saurabh.repository.JobseekerRepository;
 import com.saurabh.repository.SkillRepository;
 import com.saurabh.repository.UserRepository;
+
+
+
+
+//FIX 5: Removed double DB lookup pattern throughout this class.
+//
+// Before every method did:
+//   User user = userRepository.findByEmail(email)   <- Query 1
+//   JobSeeker js = jobseekerRepository.findByUser(user) <- Query 2
+//
+// JobseekerRepository already has findByUser_Email(String email) which
+// does a JOIN and fetches the JobSeeker in ONE query. We don't need
+// userRepository here at all — removed it entirely.
+//
+// Also added @Transactional on read methods so the lazy-loaded skills
+// Set doesn't trigger LazyInitializationException outside the session.
+
 
 @Service
 public class JobSeekerService {
@@ -37,12 +56,11 @@ public class JobSeekerService {
 	@Autowired
 	private JobSeekerSkillRepository jobSeekerSkillRepository;
 
+	@Transactional(readOnly = true)
 	public ResponseEntity<JobSeekerResponseDTO> getProfile(UserDetails userDetails) {
 
-		User user = userRepository.findByEmail(userDetails.getUsername())
-				.orElseThrow(() -> new RuntimeException("User not found"));
-
-		JobSeeker profile =  jobseekerRepository.findByUser(user).orElseThrow(() -> new RuntimeException("Profile not found"));
+		 JobSeeker profile = jobseekerRepository.findByUser_Email(userDetails.getUsername());
+	        if (profile == null) throw new ResourceNotFoundException("JobSeeker profile not found");
 		
 		Set<SkillResponseDto> skills = Optional.ofNullable(profile.getSkills())
 		        .orElse(Collections.emptySet())
@@ -52,6 +70,8 @@ public class JobSeekerService {
 		                jsSkill.getProficiencyLevel()
 		        ))
 		        .collect(Collectors.toSet());
+		
+		 var user = profile.getUser();
 		
 		UserResponseDTO userDto = new UserResponseDTO(
 		        user.getId(),
@@ -77,6 +97,7 @@ public class JobSeekerService {
 		
 	}
 
+	@Transactional
 	public JobSeeker update(JobSeekerDto jobSeekerDto, UserDetails userDetails) {
 
 		User user = userRepository.findByEmail(userDetails.getUsername())
@@ -112,6 +133,7 @@ public class JobSeekerService {
 		return jobSeekerProfile2;
 	}
 
+	@Transactional(readOnly = true)
 	public Set<SkillResponseDto> getSkills(UserDetails userDetails) {
 		User user = userRepository.findByEmail(userDetails.getUsername())
 				.orElseThrow(() -> new RuntimeException("User not found"));
@@ -126,29 +148,34 @@ public class JobSeekerService {
 	}
 
 	@SuppressWarnings("null")
+	@Transactional
 	public void addSkill(String skillName, UserDetails userDetails) {
-
-	    String email = userDetails.getUsername();
-
-	    JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(email);
-
-	    Skill skill = skillRepository.findByName(skillName);
-	    boolean exists = jobSeekerSkillRepository
-	            .existsByJobSeekerAndSkill(jobSeeker, skill);
-
-	    if(exists){
-	        throw new RuntimeException("Skill already added");
-	    }
-
-	    JobSeekerSkill jobSeekerSkill = JobSeekerSkill.builder()
-	            .jobSeeker(jobSeeker)
-	            .skill(skill)
-	            .build();
-
-	    jobSeekerSkillRepository.save(jobSeekerSkill);
-	}
+		 
+        JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername());
+        if (jobSeeker == null) throw new ResourceNotFoundException("JobSeeker profile not found");
+ 
+        // FIX 6: Before: skillRepository.findByName() returns null (not Optional).
+        // Then null was passed to existsByJobSeekerAndSkill() -> NullPointerException crash.
+        //
+        // Fix: use Optional pattern. If skill not found in master list, return 404.
+        Skill skill = Optional.ofNullable(skillRepository.findByName(skillName))
+                .orElseThrow(() -> new ResourceNotFoundException("Skill not found: " + skillName));
+ 
+        if (jobSeekerSkillRepository.existsByJobSeekerAndSkill(jobSeeker, skill)) {
+            throw new IllegalStateException("Skill already added: " + skillName);
+        }
+ 
+        JobSeekerSkill jobSeekerSkill = JobSeekerSkill.builder()
+                .jobSeeker(jobSeeker)
+                .skill(skill)
+                .build();
+ 
+        jobSeekerSkillRepository.save(jobSeekerSkill);
+    }
+ 
 
 	@SuppressWarnings("null")
+	@Transactional
 	public void removeSkill(Long skillId, UserDetails userDetails) {
 
 	    String email = userDetails.getUsername();

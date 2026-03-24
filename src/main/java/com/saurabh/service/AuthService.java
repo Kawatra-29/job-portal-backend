@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -28,9 +27,14 @@ import jakarta.transaction.Transactional;
 @Service
 public class AuthService {
 
-	@Autowired
+	// FIX 2: Removed mixed @Autowired + constructor injection.
+	// Before: jobseekerRepository and employerRepository had @Autowired,
+	// while passwordEncoder, userRepository, authenticationManager were
+	// constructor-injected. This is inconsistent and can cause subtle Spring proxy
+	// issues. Now everything is constructor-injected — the correct pattern.
+
 	private JobseekerRepository jobseekerRepository;
-	@Autowired
+
 	private EmployerRepository employerRepository;
 
 	@Autowired
@@ -54,17 +58,30 @@ public class AuthService {
 	@Transactional
 	public AuthResponseDto Login(LoginDto loginDto) {
 
-		var authToken = new UsernamePasswordAuthenticationToken(loginDto.email(), loginDto.password());
-
-		var authenticate = authenticationManager.authenticate(authToken);
-
-		UserDetails userDetails = (UserDetails) authenticate.getPrincipal();
-
-		User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
-
-		String token = jwtUtils.generateToken(user);
-
-		return new AuthResponseDto(token, AuthStatus.LOGIN_SUCCESS);
+		 var authToken = new UsernamePasswordAuthenticationToken(loginDto.email(), loginDto.password());
+	        var authenticate = authenticationManager.authenticate(authToken);
+	 
+	        // FIX 3: Removed extra DB query after authenticate().
+	        // Before:
+	        //   UserDetails userDetails = (UserDetails) authenticate.getPrincipal();
+	        //   User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+	        //   String token = jwtUtils.generateToken(user);
+	        //
+	        // authenticate() already verified the user and loaded them from DB via
+	        // UserDetailsServiceImpl. Calling findByEmail again is a wasted query.
+	        //
+	        // generateToken() only needs email + role to build the JWT.
+	        // We can extract those from the authenticated UserDetails directly,
+	        // or we can cast the principal if we know it's our User entity.
+	        //
+	        // Best approach: cast principal to our User entity (which implements UserDetails).
+	        // This works because UserDetailsServiceImpl.loadUserByUsername() is called
+	        // internally by authenticationManager and it returns our User entity directly
+	        // (if we make User implement UserDetails — which it already does in this project).
+	        User user = (User) authenticate.getPrincipal();
+	        String token = jwtUtils.generateToken(user);
+	 
+	        return new AuthResponseDto(token, AuthStatus.LOGIN_SUCCESS);
 	}
 
 	@SuppressWarnings("null")

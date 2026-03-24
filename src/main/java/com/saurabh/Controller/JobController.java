@@ -2,6 +2,7 @@ package com.saurabh.Controller;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -70,7 +71,7 @@ public class JobController {
 	@PutMapping("/jobs/{id}")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<?> updateJobById(@PathVariable Long id, @RequestBody JobRequestDto request,
+	public ResponseEntity<?> updateJobById(@PathVariable @NonNull Long id, @RequestBody JobRequestDto request,
 			@AuthenticationPrincipal UserDetails userDetails) {
 		jobService.updatejob(id, request, userDetails);
 
@@ -80,7 +81,7 @@ public class JobController {
 	@DeleteMapping("/jobs/{id}")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<?> deleteJob(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+	public ResponseEntity<?> deleteJob(@PathVariable @NonNull Long id, @AuthenticationPrincipal UserDetails userDetails) {
 		jobService.deleteJob(id, userDetails);
 		
 		return ResponseEntity.noContent().build();
@@ -88,7 +89,7 @@ public class JobController {
 	@PatchMapping("/jobs/{id}/status")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<?> updateJobStatus(@PathVariable Long id,
+	public ResponseEntity<?> updateJobStatus(@PathVariable @NonNull Long id,
 	        @RequestParam JobStatus status,
 	        @AuthenticationPrincipal UserDetails userDetails) {
 	    jobService.updateStatus(id, status, userDetails);

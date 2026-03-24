@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,7 +26,7 @@ public class ApplicationController {
 	@PostMapping("/{jobId}/apply")
 	@PreAuthorize("hasRole('JOBSEEKER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<?> applyJob(@PathVariable Long jobId,@AuthenticationPrincipal UserDetails userDetails) {
+	public ResponseEntity<?> applyJob(@PathVariable @NonNull Long jobId,@AuthenticationPrincipal UserDetails userDetails) {
 
 		applicationService.applyJob(jobId, userDetails);
 
