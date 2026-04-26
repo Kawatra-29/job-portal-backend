@@ -3,12 +3,14 @@ package com.saurabh.repository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
 import com.saurabh.Entity.Job;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
 
-public interface JobRepository extends JpaRepository<Job, Long> {
+public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificationExecutor<Job> {
 
     
 	@NonNull
@@ -26,5 +28,9 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     // Use this method in EmployerController instead of findByEmployerId
     // when you need to show application counts alongside job listings.
     @Query("SELECT j FROM Job j LEFT JOIN FETCH j.applications WHERE j.employer.id = :employerId")
+    
     List<Job> findByEmployerIdWithApplications(@Param("employerId") Long employerId);
+    
+    
+    
 }

@@ -4,9 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.saurabh.DTOs.JobRequestDto;
@@ -27,6 +24,7 @@ public class JobService {
 	private EmployerRepository employerRepository;
 
 	private static final Logger logger = LoggerFactory.getLogger(JobService.class);
+	
 
 	public Job createJob(JobRequestDto request, UserDetails userDetails) {
 
@@ -46,7 +44,7 @@ public class JobService {
 		return jobRepository.save(job);
 	}
 
-	public Optional<Job> getJob(@NonNull Long id) {
+	public Job getJob(@NonNull Long id) {
 
 		logger.debug("Fetching job with id {}", id);
 
@@ -56,7 +54,7 @@ public class JobService {
 			return new RuntimeException("Job not found");
 		});
 
-		return Optional.of(job);
+		return job;
 	}
 
 	public void updatejob(@NonNull Long id, JobRequestDto request, UserDetails userDetails) {

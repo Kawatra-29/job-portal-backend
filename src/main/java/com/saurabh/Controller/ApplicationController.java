@@ -1,6 +1,7 @@
 package com.saurabh.Controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,13 +25,17 @@ public class ApplicationController {
 	private ApplicationService applicationService;
 
 	@PostMapping("/{jobId}/apply")
-	@PreAuthorize("hasRole('JOBSEEKER')")
+	@PreAuthorize("hasAuthority('ROLE_JOBSEEKER')")
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<?> applyJob(@PathVariable @NonNull Long jobId,@AuthenticationPrincipal UserDetails userDetails) {
 
 		applicationService.applyJob(jobId, userDetails);
 
-		return ResponseEntity.ok("Applied successfully");
+		return ResponseEntity.ok(Map.of(
+		        "message", "Applied successfully",
+		        "status", "SUCCESS",
+		        "jobId", jobId
+		    ));
 	}
 	
 	// Employer: application status update

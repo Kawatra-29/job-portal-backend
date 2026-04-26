@@ -10,7 +10,7 @@ public class CustomOpenApi {
 	@Bean
 	OpenAPI customOpenAPI() {
 		return new OpenAPI()
-				.addServersItem(new Server().url("https://job-portal-backend-production-1bc7.up.railway.app"))
-				.addServersItem(new Server().url("http://localhost:8080"));
+				.addServersItem(new Server().url("http://localhost:8080"))
+				.addServersItem(new Server().url("https://job-portal-backend-production-1bc7.up.railway.app"));
 	}
 }

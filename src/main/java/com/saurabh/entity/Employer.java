@@ -2,6 +2,7 @@ package com.saurabh.Entity;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.saurabh.ENUMS.CompanySize;
 
 import jakarta.persistence.*;
@@ -48,6 +49,7 @@ public class Employer {
     private Boolean isVerified;
     
     @OneToMany(mappedBy = "employer")
+    @JsonIgnore
     private List<Job> jobs;
 
 }

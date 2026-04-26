@@ -1,13 +1,12 @@
 package com.saurabh.Controller;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,10 +20,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.saurabh.DTOs.JobRequestDto;
+import com.saurabh.DTOs.JobResponseDto;
 import com.saurabh.ENUMS.JobStatus;
+import com.saurabh.ENUMS.JobType;
+import com.saurabh.ENUMS.WorkMode;
 import com.saurabh.Entity.Job;
+import com.saurabh.Specification.JobSpecification;
+import com.saurabh.mapper.JobMapper;
 import com.saurabh.repository.JobRepository;
 import com.saurabh.service.JobService;
 
@@ -42,19 +45,32 @@ public class JobController {
 
 	@Autowired
 	public JobService jobService;
-
+	
+	@Autowired
+	private JobMapper jobMapper;
+ 
 	@GetMapping("/jobs")
-	public Page<Job> getJobs(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-
-		Pageable pageable = PageRequest.of(page, size);
-
-		return jobRepository.findAll(pageable);
+	public Page<JobResponseDto> getJobs(
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size,
+	        @RequestParam(required = false) String title,
+	        @RequestParam(required = false) String location,
+	        @RequestParam(required = false) JobType jobType,
+	        @RequestParam(required = false) WorkMode workMode,
+	        @RequestParam(required = false) JobStatus status
+	) {
+	    Pageable pageable = PageRequest.of(page, size);
+	    Specification<Job> spec = JobSpecification.filter(title, location, jobType, workMode, status);
+	    Page<Job> job = jobRepository.findAll(spec, pageable);
+	    return jobMapper.__toDTO__(job);
 	}
+	
 
 	@GetMapping("/jobs/{id}")
-	public Optional<Job> getJobsById(@PathVariable long id) {
+	public JobResponseDto getJobsById(@PathVariable long id) {
 
-		return jobService.getJob(id);
+		Job job = jobService.getJob(id);
+		return jobMapper.toDTO(job);
 	}
 
 	@PostMapping("/jobs")

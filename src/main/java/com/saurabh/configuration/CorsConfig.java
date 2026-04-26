@@ -18,10 +18,12 @@ public class CorsConfig {
 			public void addCorsMappings(@NonNull CorsRegistry registry) {
 
 				registry.addMapping("/**")
-						.allowedOrigins("http://localhost:3000",
-								"https://job-portal-backend-production-1bc7.up.railway.app", 
-								"http://localhost:5173")
-						.allowedMethods("*").allowedHeaders("*");
+						.allowedOrigins("http://localhost:5173",
+								"https://job-portal-backend-production-1bc7.up.railway.app"
+								)
+						 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+	                        .allowedHeaders("*")
+	                        .allowCredentials(true);
 			}
 		};
 	}
