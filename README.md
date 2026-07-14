@@ -24,11 +24,10 @@ A full-featured **Job Portal REST API** built with **Spring Boot 3**, **Spring S
 
 ```
 src/main/java/com/saurabh/
-├── configuration/          # Security, JWT filter, CORS, Swagger
+├── configuration/          # Security, JWT filter, CORS (handled in SecurityFilterChainConfig), Swagger
 │   ├── JWTAuthenticationFilter.java
 │   ├── SecurityFilterChainConfig.java
 │   ├── AuthenticationConfig.java
-│   ├── CorsConfig.java
 │   ├── SwaggerConfig.java
 │   └── CustomAuthenticationEntryPoint.java
 ├── Controller/             # REST Controllers
@@ -304,7 +303,7 @@ https://job-portal-backend-production-1bc7.up.railway.app/swagger-ui/index.html
 - **Role-based access control** — Enforced at both the filter chain level (`SecurityFilterChainConfig`) and method level (`@PreAuthorize`).
 - **Ownership checks** — Employers can only modify their own jobs and applications; Job Seekers can only withdraw their own applications.
 - **BCrypt password hashing** — All passwords stored as BCrypt hashes.
-- **CORS configured** — Allows requests from `localhost:3000` and the production frontend.
+- **CORS configured** — Allows requests from `http://localhost:5173` and the production frontend.
 
 ---
 
