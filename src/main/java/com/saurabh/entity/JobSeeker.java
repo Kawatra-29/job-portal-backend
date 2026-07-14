@@ -40,7 +40,7 @@ public class JobSeeker {
 
     private BigDecimal expectedSalary;
     
-    @OneToMany(mappedBy = "jobSeeker", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "jobSeeker", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private Set<JobSeekerSkill> skills;
 

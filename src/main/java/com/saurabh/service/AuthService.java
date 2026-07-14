@@ -2,7 +2,6 @@ package com.saurabh.service;
 
 import java.time.LocalDateTime;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,17 +26,11 @@ import jakarta.transaction.Transactional;
 @Service
 public class AuthService {
 
-	// FIX 2: Removed mixed @Autowired + constructor injection.
-	// Before: jobseekerRepository and employerRepository had @Autowired,
-	// while passwordEncoder, userRepository, authenticationManager were
-	// constructor-injected. This is inconsistent and can cause subtle Spring proxy
-	// issues. Now everything is constructor-injected — the correct pattern.
-
 	private JobseekerRepository jobseekerRepository;
 
 	private EmployerRepository employerRepository;
 
-	@Autowired
+	
 	private JwtUtils jwtUtils;
 	private PasswordEncoder passwordEncoder;
 	private UserRepository userRepository;
@@ -60,38 +53,20 @@ public class AuthService {
 
 		 var authToken = new UsernamePasswordAuthenticationToken(loginDto.email(), loginDto.password());
 	        var authenticate = authenticationManager.authenticate(authToken);
-	 
-	        // FIX 3: Removed extra DB query after authenticate().
-	        // Before:
-	        //   UserDetails userDetails = (UserDetails) authenticate.getPrincipal();
-	        //   User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
-	        //   String token = jwtUtils.generateToken(user);
-	        //
-	        // authenticate() already verified the user and loaded them from DB via
-	        // UserDetailsServiceImpl. Calling findByEmail again is a wasted query.
-	        //
-	        // generateToken() only needs email + role to build the JWT.
-	        // We can extract those from the authenticated UserDetails directly,
-	        // or we can cast the principal if we know it's our User entity.
-	        //
-	        // Best approach: cast principal to our User entity (which implements UserDetails).
-	        // This works because UserDetailsServiceImpl.loadUserByUsername() is called
-	        // internally by authenticationManager and it returns our User entity directly
-	        // (if we make User implement UserDetails — which it already does in this project).
+	
 	        User user = (User) authenticate.getPrincipal();
 	        String token = jwtUtils.generateToken(user);
 	 
-	        return new AuthResponseDto(token, AuthStatus.LOGIN_SUCCESS);
+	        return new AuthResponseDto(token, AuthStatus.LOGIN_SUCCESS,user.getRole());
 	}
 
 	@SuppressWarnings("null")
-	@Transactional // all database operation either success or rollback remain operations if any
-					// one operation is unsuccessfull
+	@Transactional
 	public AuthResponseDto signup(AuthRequestDto request) {
 
 		// 1️⃣ Check if user already exists
 		if (userRepository.existsByEmail(request.email())) {
-			return new AuthResponseDto(null, AuthStatus.USER_ALREADY_EXISTS);
+			return new AuthResponseDto(null, AuthStatus.USER_ALREADY_EXISTS,null);
 		}
 
 		if (request.role() == Role.ADMIN) {
@@ -114,7 +89,6 @@ public class AuthService {
 
 		userRepository.save(user);
 
-		// 4️⃣ If Candidate → Create Candidate Profile
 		if (assignedRole == Role.JOBSEEKER) {
 
 			JobSeeker jobSeeker = JobSeeker.builder().user(user).build();
@@ -129,6 +103,6 @@ public class AuthService {
 		// 5 Generate Token
 		String token = jwtUtils.generateToken(user);
 
-		return new AuthResponseDto(token, AuthStatus.USER_CREATED_SUCCESSFULLY);
+		return new AuthResponseDto(token, AuthStatus.USER_CREATED_SUCCESSFULLY,user.getRole());
 	}
 }

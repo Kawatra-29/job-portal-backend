@@ -28,51 +28,49 @@ public class UserController {
 	@GetMapping("/check")
 	@SecurityRequirement(name = "bearerAuth")
 	public String checkPrincipal(Authentication authentication) {
-	    return authentication.getPrincipal().getClass().getName();
+		return authentication.getPrincipal().getClass().getName();
 	}
-	
+
 	@GetMapping("/me")
-	@PreAuthorize("hasRole('JOBSEEKER')")
 	@SecurityRequirement(name = "bearerAuth")
 	public UserResponseDTO getUser(@AuthenticationPrincipal UserDetails userDetails) {
-	       return userService.getProfile(userDetails);
+		return userService.getProfile(userDetails);
 	}
 
 	@PutMapping("/me")
 	@SecurityRequirement(name = "bearerAuth")
-	@PreAuthorize("hasRole('JOBSEEKER')")
-    public ResponseEntity<User> updateUser(@RequestBody User user,@AuthenticationPrincipal UserDetails userDetails) {
+	public ResponseEntity<User> updateUser(@RequestBody User user, @AuthenticationPrincipal UserDetails userDetails) {
 
-        User updatedUser = userService.updateUser(user,userDetails);
+		User updatedUser = userService.updateUser(user, userDetails);
 
-        return ResponseEntity.ok(updatedUser);
-    }
-	
+		return ResponseEntity.ok(updatedUser);
+	}
+
 	@PutMapping("/password")
 	@PreAuthorize("hasRole('JOBSEEKER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public User updatePass(PasswordRequestDto password ,@AuthenticationPrincipal UserDetails userDetails) {
-	       return userService.updatePass(password, userDetails);
+	public User updatePass(@RequestBody PasswordRequestDto password, @AuthenticationPrincipal UserDetails userDetails) {
+		return userService.updatePass(password, userDetails);
 	}
-	
-	
+
 	@DeleteMapping("/me")
 	@PreAuthorize("hasRole('JOBSEEKER')")
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<String> deleteUser(@AuthenticationPrincipal UserDetails userDetails) {
 
-	    userService.deleteUser(userDetails.getUsername());
+		userService.deleteUser(userDetails.getUsername());
 
-	    return ResponseEntity.ok("User deleted successfully");
-	}	
-	
-	
+		return ResponseEntity.ok("User deleted successfully");
+	}
+
 }
 
-//| `GET` | `/users/me` | Get current user's profile | User |
-//| `PUT` | `/users/me` | Update name, phone, profile picture | User |
-//| `PUT` | `/users/me/password` | Change password (requires current password) | User |
-//| `POST` | `/users/me/avatar` | Upload profile picture (multipart/form-data) | User |
-//| `DELETE` | `/users/me` | Permanently delete own account | User |
-//| `GET` | `/admin/users` | List all users with pagination | Admin |
-//| `DELETE` | `/admin/users/{id}` | Ban or delete a user | Admin |
+// | `GET` | `/users/me` | Get current user's profile | User |
+// | `PUT` | `/users/me` | Update name, phone, profile picture | User |
+// | `PUT` | `/users/me/password` | Change password (requires current password)
+// | User |
+// | `POST` | `/users/me/avatar` | Upload profile picture (multipart/form-data)
+// | User |
+// | `DELETE` | `/users/me` | Permanently delete own account | User |
+// | `GET` | `/admin/users` | List all users with pagination | Admin |
+// | `DELETE` | `/admin/users/{id}` | Ban or delete a user | Admin |

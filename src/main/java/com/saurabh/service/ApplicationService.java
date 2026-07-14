@@ -1,6 +1,8 @@
 package com.saurabh.service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,6 +14,8 @@ import com.saurabh.Entity.Employer;
 import com.saurabh.Entity.Job;
 import com.saurabh.Entity.JobSeeker;
 import com.saurabh.Entity.User;
+import com.saurabh.DTOs.MyApplicationResponseDto;
+import com.saurabh.mapper.JobMapper;
 import com.saurabh.exception.ResourceNotFoundException;
 import com.saurabh.repository.ApplicationRepository;
 import com.saurabh.repository.EmployerRepository;
@@ -37,6 +41,10 @@ public class ApplicationService {
 	@Autowired
 	private EmployerRepository employerRepository;
 
+	@Autowired
+	private JobMapper jobMapper;
+
+	@SuppressWarnings("null")
 	@Transactional
 	public void applyJob(@NonNull Long jobId, UserDetails userDetails) {
 		Job job = jobRepository.findById(jobId)
@@ -49,14 +57,18 @@ public class ApplicationService {
 				.orElseThrow(() -> new ResourceNotFoundException("JobSeeker profile not found"));
 
 		if (applicationRepository.existsByJobAndJobSeeker(job, jobSeeker)) {
-			// FIX 9: Changed RuntimeException to IllegalStateException.
-			// GlobalExceptionHandler maps IllegalStateException -> 409 Conflict,
-			// which is semantically correct for "you already applied".
 			throw new IllegalStateException("You have already applied for this job");
 		}
+		Application application = Application.builder()
+				.job(job)
+				.jobSeeker(jobSeeker)
+				.appliedAt(java.time.LocalDateTime.now())
+				.status(com.saurabh.ENUMS.ApplicationStatus.APPLIED)
+				.build();
+
+		applicationRepository.save(application);
 	}
 
-	// Application status update
 	@Transactional
 	public void updateStatus(@NonNull Long applicationId, ApplicationStatus newStatus, UserDetails userDetails) {
 		Application application = applicationRepository.findById(applicationId)
@@ -74,31 +86,34 @@ public class ApplicationService {
 		applicationRepository.save(application);
 	}
 
-	// FIX 11: Added @Transactional(readOnly = true) on read methods.
-	// Without @Transactional, if the session closes before lazy-loaded
-	// collections are accessed, you get LazyInitializationException.
-	// readOnly = true also tells Hibernate to skip dirty checking — faster.
-
 	@Transactional(readOnly = true)
-	public List<Application> getMyApplications(UserDetails userDetails) {
-		JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername());
-		return applicationRepository.findByJobSeeker(jobSeeker);
+	public List<MyApplicationResponseDto> getMyApplications(UserDetails userDetails) {
+		Optional<JobSeeker> jobSeekerOpt = Optional.ofNullable(jobseekerRepository.findByUser_Email(userDetails.getUsername()));
+		List<Application> apps = jobSeekerOpt.map(applicationRepository::findByJobSeeker)
+				.orElseThrow(() -> new ResourceNotFoundException("JobSeeker profile not found"));
+		return apps.stream()
+				.map(app -> new MyApplicationResponseDto(
+						app.getId(),
+						jobMapper.toDTO(app.getJob()),
+						app.getStatus(),
+						app.getAppliedAt()
+				))
+				.collect(Collectors.toList());
 	}
 
-	// Application withdraw
 	@Transactional
-    public void withdraw(@NonNull Long applicationId, UserDetails userDetails) {
-        Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Application not found: " + applicationId));
- 
-        JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername());
-        if (jobSeeker == null) throw new ResourceNotFoundException("JobSeeker profile not found");
- 
-        if (!application.getJobSeeker().getId().equals(jobSeeker.getId())) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "You are not authorized to withdraw this application");
-        }
- 
-        applicationRepository.delete(application);
-    }
+	public void withdraw(@NonNull Long applicationId, UserDetails userDetails) {
+		Application application = applicationRepository.findById(applicationId)
+				.orElseThrow(() -> new ResourceNotFoundException("Application not found: " + applicationId));
+
+		JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername());
+		if (jobSeeker == null) throw new ResourceNotFoundException("JobSeeker profile not found");
+
+		if (!application.getJobSeeker().getId().equals(jobSeeker.getId())) {
+			throw new org.springframework.security.access.AccessDeniedException(
+					"You are not authorized to withdraw this application");
+		}
+
+		applicationRepository.delete(application);
+	}
 }

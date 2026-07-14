@@ -13,10 +13,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.saurabh.DTOs.ApplicationResponseDto;
 import com.saurabh.DTOs.EmployerRequestDto;
-import com.saurabh.Entity.Application;
+import com.saurabh.DTOs.EmployerSummaryDto;
+import com.saurabh.DTOs.JobResponseDto;
 import com.saurabh.Entity.Employer;
-import com.saurabh.Entity.Job;
 import com.saurabh.service.EmployerService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -32,7 +34,7 @@ public class EmployerController {
 	@GetMapping("/me")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public Employer getProfile(@AuthenticationPrincipal UserDetails userDetails)
+	public EmployerSummaryDto getProfile(@AuthenticationPrincipal UserDetails userDetails)
 	{
 		return employerService.getProfile(userDetails);
 	}
@@ -53,14 +55,14 @@ public class EmployerController {
 	@GetMapping("/jobs")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public List<Job> getMyJobs(@AuthenticationPrincipal UserDetails userDetails) {
+	public List<JobResponseDto> getMyJobs(@AuthenticationPrincipal UserDetails userDetails) {
 		return employerService.getMyJobs(userDetails);
 	}
 	
 	@GetMapping("/jobs/{jobId}/applications")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public List<Application> getApplications(@PathVariable Long jobId) {
+	public List<ApplicationResponseDto> getApplications(@PathVariable Long jobId) {
 
 	    return employerService.getApplications(jobId);
 	}

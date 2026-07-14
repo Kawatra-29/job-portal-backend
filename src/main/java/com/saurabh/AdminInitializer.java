@@ -2,6 +2,7 @@ package com.saurabh;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,7 @@ import com.saurabh.Entity.User;
 import com.saurabh.repository.UserRepository;
 
 @Component
+@Order(1)
 public class AdminInitializer implements CommandLineRunner {
 
     @Autowired

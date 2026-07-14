@@ -33,12 +33,16 @@ public class Job {
 	@JoinColumn(name = "employer_id")
 	private Employer employer;
 
+	@Column(columnDefinition = "TEXT")
 	private String title;
 
+	@Column(columnDefinition = "TEXT")
 	private String description;
 
+	@Column(columnDefinition = "TEXT")
 	private String requirements;
 
+	@Column(columnDefinition = "TEXT")
 	private String responsibilities;
 
 	@Enumerated(EnumType.STRING)
@@ -47,6 +51,7 @@ public class Job {
 	@Enumerated(EnumType.STRING)
 	private WorkMode workMode;
 
+	@Column(columnDefinition = "TEXT")
 	private String location;
 
 	private BigDecimal salaryMin;

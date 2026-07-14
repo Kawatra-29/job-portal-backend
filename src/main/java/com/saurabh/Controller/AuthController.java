@@ -24,34 +24,19 @@ public class AuthController {
 
 	@PostMapping("/login")
 	public ResponseEntity<AuthResponseDto> Login(@RequestBody LoginDto loginDto) {
-
-		try {
-			var authResponseDto = authService.Login(loginDto);
-
-			return ResponseEntity.status(HttpStatus.OK).body(authResponseDto);
-		} catch (Exception e) {
-			e.printStackTrace();
-			
-			var authResponseDto = new AuthResponseDto(null, AuthStatus.LOGIN_FAILED);
-			
-			return ResponseEntity.status(HttpStatus.CONFLICT).body(authResponseDto);
-		}
+		var authResponseDto = authService.Login(loginDto);
+		return ResponseEntity.ok(authResponseDto);
 	}
 
 	@PostMapping("/sign-up")
 	public ResponseEntity<AuthResponseDto> signUp(@RequestBody AuthRequestDto authRequestDto) {
-		try {
+		var authResponseDto = authService.signup(authRequestDto);
 
-			var authResponseDto = authService.signup(authRequestDto);
-
-			return ResponseEntity.status(HttpStatus.OK).body(authResponseDto);
-		} catch (Exception e) {
-			e.printStackTrace(); // IMPORTANT
-
-			var authResponseDto = new AuthResponseDto(null, AuthStatus.USER_NOT_CREATED);
-
+		if (authResponseDto.authStatus() == AuthStatus.USER_ALREADY_EXISTS) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).body(authResponseDto);
 		}
+
+		return ResponseEntity.status(HttpStatus.CREATED).body(authResponseDto);
 	}
 }
 

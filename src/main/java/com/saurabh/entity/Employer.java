@@ -31,23 +31,23 @@ public class Employer {
 
     private String companyName;
 
-//    private String companyLogoUrl;
+    // private String companyLogoUrl;
 
-//    private String website;
-//
-//    private String industry;
+    // private String website;
+    //
+    // private String industry;
 
     @Enumerated(EnumType.STRING)
     private CompanySize companySize;
 
-//    private Integer foundedYear;
-//
+    // private Integer foundedYear;
+    //
     private String description;
-//
-//    private String headquarters;
+    //
+    // private String headquarters;
+    @Builder.Default
+    private Boolean isVerified = false;
 
-    private Boolean isVerified;
-    
     @OneToMany(mappedBy = "employer")
     @JsonIgnore
     private List<Job> jobs;

@@ -85,7 +85,7 @@ public class JwtUtils {
                 .issuer(ISSUER)
                 .subject(user.getEmail())
                 .issuedAt(Date.from(now))
-                .expiration(Date.from(now.plus(jwtExpiration, ChronoUnit.MINUTES)))
+                .expiration(Date.from(now.plus(jwtExpiration, ChronoUnit.MILLIS)))
                 .signWith(secretKey)
                 .compact();
     }
