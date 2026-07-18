@@ -15,12 +15,10 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 
-
-@SuppressWarnings("serial")
 @Entity
 @Table(name = "users", indexes = {
-	    @Index(name = "idx_email", columnList = "email")
-	})
+        @Index(name = "idx_email", columnList = "email")
+})
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -44,15 +42,21 @@ public class User implements UserDetails {
 
     private String phone;
 
-//    private String profilePictureUrl;
-//
-//    private Boolean isVerified;
-//
-//    private Boolean isActive;
-    
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private JobSeeker jobSeeker;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Employer employer;
+
+    // private String profilePictureUrl;
+    //
+    // private Boolean isVerified;
+    //
+    // private Boolean isActive;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
-    
+
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
@@ -65,9 +69,10 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
-	@Override
-	public @Nullable String getPassword() {
-		return passwordHash;
-	}
+
+    @Override
+    public @Nullable String getPassword() {
+        return passwordHash;
+    }
 
 }

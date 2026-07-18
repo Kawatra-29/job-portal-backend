@@ -25,7 +25,7 @@ public class Application {
     private JobSeeker jobSeeker;
 	
 	
-	@ManyToOne(cascade = CascadeType.REMOVE)
+	@ManyToOne
 	@JoinColumn(name = "job_id")
 	private Job job;
 	

@@ -2,7 +2,7 @@ package com.saurabh.Controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+//import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -47,14 +47,12 @@ public class UserController {
 	}
 
 	@PutMapping("/password")
-	@PreAuthorize("hasRole('JOBSEEKER')")
 	@SecurityRequirement(name = "bearerAuth")
 	public User updatePass(@RequestBody PasswordRequestDto password, @AuthenticationPrincipal UserDetails userDetails) {
 		return userService.updatePass(password, userDetails);
 	}
 
 	@DeleteMapping("/me")
-	@PreAuthorize("hasRole('JOBSEEKER')")
 	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<String> deleteUser(@AuthenticationPrincipal UserDetails userDetails) {
 

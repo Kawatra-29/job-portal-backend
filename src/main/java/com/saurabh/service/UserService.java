@@ -12,17 +12,16 @@ import com.saurabh.DTOs.PasswordRequestDto;
 import com.saurabh.DTOs.UserResponseDTO;
 import com.saurabh.Entity.User;
 import com.saurabh.exception.ResourceNotFoundException;
-import com.saurabh.exception.UserNotFoundException;
 import com.saurabh.repository.UserRepository;
 
 @Service
 public class UserService {
 
     private final PasswordEncoder passwordEncoder;
-	private final UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    UserService(PasswordEncoder passwordEncoder,UserRepository userRepository) {
-    	this.userRepository = userRepository;
+    UserService(PasswordEncoder passwordEncoder, UserRepository userRepository) {
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -36,8 +35,7 @@ public class UserService {
                 user.getFullName(),
                 user.getEmail(),
                 user.getPhone(),
-                user.getRole().name()
-        );
+                user.getRole().name());
     }
 
     @Transactional
@@ -63,6 +61,7 @@ public class UserService {
     }
 
     @Transactional
+    @SuppressWarnings("null")
     public void deleteUser(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));

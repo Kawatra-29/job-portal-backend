@@ -48,7 +48,7 @@ public class Employer {
     @Builder.Default
     private Boolean isVerified = false;
 
-    @OneToMany(mappedBy = "employer")
+    @OneToMany(mappedBy = "employer", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Job> jobs;
 

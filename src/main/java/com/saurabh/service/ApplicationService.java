@@ -88,7 +88,8 @@ public class ApplicationService {
 
 	@Transactional(readOnly = true)
 	public List<MyApplicationResponseDto> getMyApplications(UserDetails userDetails) {
-		Optional<JobSeeker> jobSeekerOpt = Optional.ofNullable(jobseekerRepository.findByUser_Email(userDetails.getUsername()));
+		Optional<JobSeeker> jobSeekerOpt = Optional
+				.ofNullable(jobseekerRepository.findByUser_Email(userDetails.getUsername()));
 		List<Application> apps = jobSeekerOpt.map(applicationRepository::findByJobSeeker)
 				.orElseThrow(() -> new ResourceNotFoundException("JobSeeker profile not found"));
 		return apps.stream()
@@ -96,8 +97,7 @@ public class ApplicationService {
 						app.getId(),
 						jobMapper.toDTO(app.getJob()),
 						app.getStatus(),
-						app.getAppliedAt()
-				))
+						app.getAppliedAt()))
 				.collect(Collectors.toList());
 	}
 
@@ -107,7 +107,8 @@ public class ApplicationService {
 				.orElseThrow(() -> new ResourceNotFoundException("Application not found: " + applicationId));
 
 		JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername());
-		if (jobSeeker == null) throw new ResourceNotFoundException("JobSeeker profile not found");
+		if (jobSeeker == null)
+			throw new ResourceNotFoundException("JobSeeker profile not found");
 
 		if (!application.getJobSeeker().getId().equals(jobSeeker.getId())) {
 			throw new org.springframework.security.access.AccessDeniedException(

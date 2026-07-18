@@ -27,7 +27,6 @@ public class JobService {
 
 	private static final Logger logger = LoggerFactory.getLogger(JobService.class);
 
-
 	@Transactional
 	public Job createJob(JobRequestDto request, UserDetails userDetails) {
 

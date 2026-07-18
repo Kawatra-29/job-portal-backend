@@ -2,6 +2,7 @@ package com.saurabh.Entity;
 
 import java.math.BigDecimal;
 import java.util.Set;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.saurabh.ENUMS.Availability;
@@ -46,6 +47,10 @@ public class JobSeeker {
 
     @Enumerated(EnumType.STRING)
     private Availability availability;
+
+    @OneToMany(mappedBy = "jobSeeker", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private List<Application> applications;
 //    private String resumeUrl;
 //    private String linkedinUrl;
 //
