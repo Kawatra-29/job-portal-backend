@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import com.saurabh.DTOs.SkillResponseDto;
 import com.saurabh.DTOs.UserResponseDTO;
 import com.saurabh.Entity.Employer;
 import com.saurabh.Entity.JobSeeker;
+import com.saurabh.Entity.Job;
 import java.util.Collections;
 import java.util.Set;
 import com.saurabh.exception.ResourceNotFoundException;
@@ -49,50 +51,60 @@ public class EmployerService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<ApplicationResponseDto> getApplications(Long jobId) {
-	    return applicationRepository.findByJobId(jobId).stream()
-	            .map(a -> {
-	                JobSeeker profile = a.getJobSeeker();
-	                JobSeekerResponseDTO jobSeekerDto = null;
-	                if (profile != null) {
-	                    Set<SkillResponseDto> skills = Optional.ofNullable(profile.getSkills())
-	                            .orElse(Collections.emptySet())
-	                            .stream()
-	                            .map(jsSkill -> new SkillResponseDto(
-	                                    jsSkill.getSkill().getName(),
-	                                    jsSkill.getProficiencyLevel()))
-	                            .collect(Collectors.toSet());
+	public List<ApplicationResponseDto> getApplications(@NonNull Long jobId, UserDetails userDetails) {
+		Employer employer = employerRepository.findByUser_Email(userDetails.getUsername())
+				.orElseThrow(() -> new ResourceNotFoundException("Employer not found"));
 
-	                    var user = profile.getUser();
-	                    UserResponseDTO userDto = user != null ? new UserResponseDTO(
-	                            user.getId(),
-	                            user.getFullName(),
-	                            user.getEmail(),
-	                            user.getPhone(),
-	                            user.getRole().name()) : null;
+		Job job = jobRepository.findById(jobId)
+				.orElseThrow(() -> new ResourceNotFoundException("Job not found: " + jobId));
 
-	                    jobSeekerDto = new JobSeekerResponseDTO(
-	                            profile.getId(),
-	                            profile.getHeadline(),
-	                            profile.getSummary(),
-	                            profile.getLocation(),
-	                            profile.getYearsOfExperience(),
-	                            profile.getExpectedSalary(),
-	                            profile.getAvailability() != null ? profile.getAvailability().name() : null,
-	                            skills,
-	                            userDto);
-	                }
-	                
-	                return new ApplicationResponseDto(
-	                    a.getId(),
-	                    a.getJob().getId(),
-	                    a.getJob().getTitle(),
-	                    a.getJob().getEmployer().getCompanyName(),
-	                    a.getStatus(),
-	                    a.getAppliedAt(),
-	                    jobSeekerDto
-	                );
-	            }).collect(Collectors.toList());
+		if (!job.getEmployer().getId().equals(employer.getId())) {
+			throw new org.springframework.security.access.AccessDeniedException(
+					"You are not authorized to view applications for this job");
+		}
+
+		return applicationRepository.findByJobId(jobId).stream()
+				.map(a -> {
+					JobSeeker profile = a.getJobSeeker();
+					JobSeekerResponseDTO jobSeekerDto = null;
+					if (profile != null) {
+						Set<SkillResponseDto> skills = Optional.ofNullable(profile.getSkills())
+								.orElse(Collections.emptySet())
+								.stream()
+								.map(jsSkill -> new SkillResponseDto(
+										jsSkill.getSkill().getName(),
+										jsSkill.getProficiencyLevel()))
+								.collect(Collectors.toSet());
+
+						var user = profile.getUser();
+						UserResponseDTO userDto = user != null ? new UserResponseDTO(
+								user.getId(),
+								user.getFullName(),
+								user.getEmail(),
+								user.getPhone(),
+								user.getRole().name()) : null;
+
+						jobSeekerDto = new JobSeekerResponseDTO(
+								profile.getId(),
+								profile.getHeadline(),
+								profile.getSummary(),
+								profile.getLocation(),
+								profile.getYearsOfExperience(),
+								profile.getExpectedSalary(),
+								profile.getAvailability() != null ? profile.getAvailability().name() : null,
+								skills,
+								userDto);
+					}
+
+					return new ApplicationResponseDto(
+							a.getId(),
+							a.getJob().getId(),
+							a.getJob().getTitle(),
+							a.getJob().getEmployer().getCompanyName(),
+							a.getStatus(),
+							a.getAppliedAt(),
+							jobSeekerDto);
+				}).collect(Collectors.toList());
 	}
 
 	@Transactional(readOnly = true)
@@ -133,4 +145,27 @@ public class EmployerService {
 		employer.setIsVerified(true);
 		employerRepository.save(employer);
 	}
+
+	@Transactional(readOnly = true)
+	public List<ApplicationResponseDto> getAllApplications(UserDetails userDetails) {
+		Employer employer = employerRepository.findByUser_Email(userDetails.getUsername())
+				.orElseThrow(() -> new ResourceNotFoundException("Employer not found"));
+
+		// Yeh already exist karta hai - ek hi query mein sab fetch
+		List<Job> jobs = jobRepository.findByEmployerIdWithApplications(employer.getId());
+
+		return jobs.stream()
+				.flatMap(job -> job.getApplications().stream()
+						.map(a -> new ApplicationResponseDto(
+								a.getId(),
+								job.getId(),
+								job.getTitle(),
+								employer.getCompanyName(),
+								a.getStatus(),
+								a.getAppliedAt(),
+								null // jobSeekerDto add karo zaroorat ho to
+						)))
+				.collect(Collectors.toList());
+	}
+
 }

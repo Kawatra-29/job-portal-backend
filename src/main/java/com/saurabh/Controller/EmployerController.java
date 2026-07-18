@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,52 +31,55 @@ public class EmployerController {
 	@Autowired
 	private EmployerService employerService;
 
-	
 	@GetMapping("/me")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public EmployerSummaryDto getProfile(@AuthenticationPrincipal UserDetails userDetails)
-	{
+	public EmployerSummaryDto getProfile(@AuthenticationPrincipal UserDetails userDetails) {
 		return employerService.getProfile(userDetails);
 	}
-	
-	
+
 	@PutMapping("/me")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<?> update(@RequestBody EmployerRequestDto employerRequestDto,@AuthenticationPrincipal UserDetails userDetails)
-	{
+	public ResponseEntity<?> update(@RequestBody EmployerRequestDto employerRequestDto,
+			@AuthenticationPrincipal UserDetails userDetails) {
 		Employer employer = employerService.update(employerRequestDto, userDetails);
 
-	    return ResponseEntity.ok(employer);
-		
+		return ResponseEntity.ok(employer);
+
 	}
-	
-	
+
 	@GetMapping("/jobs")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
 	public List<JobResponseDto> getMyJobs(@AuthenticationPrincipal UserDetails userDetails) {
 		return employerService.getMyJobs(userDetails);
 	}
-	
+
 	@GetMapping("/jobs/{jobId}/applications")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public List<ApplicationResponseDto> getApplications(@PathVariable Long jobId) {
+	public List<ApplicationResponseDto> getApplications(@PathVariable @NonNull Long jobId,
+			@AuthenticationPrincipal UserDetails userDetails) {
 
-	    return employerService.getApplications(jobId);
+		return employerService.getApplications(jobId, userDetails);
 	}
-	
-	
-	
-	
-	
+
+	@GetMapping("/all-applications")
+	@PreAuthorize("hasRole('EMPLOYER')")
+	@SecurityRequirement(name = "bearerAuth")
+	public List<ApplicationResponseDto> getAllApplications(@AuthenticationPrincipal UserDetails userDetails) {
+		return employerService.getAllApplications(userDetails);
+	}
+
 }
 //
-//| `GET` | `/employers/me` | Get own company profile | Employer |
-//| `PUT` | `/employers/me` | Update company info (name, description, etc.) | Employer |
-//| `POST` | `/employers/me/logo` | Upload company logo (multipart/form-data) | Employer |
-//| `GET` | `/employers/{id}` | Get public employer/company profile | Public |
-//| `GET` | `/employers/{id}/reviews` | List reviews for a company | Public |
-//| `POST` | `/admin/employers/{id}/verify` | Grant verified badge to company | Admin |
+// | `GET` | `/employers/me` | Get own company profile | Employer |
+// | `PUT` | `/employers/me` | Update company info (name, description, etc.) |
+// Employer |
+// | `POST` | `/employers/me/logo` | Upload company logo (multipart/form-data) |
+// Employer |
+// | `GET` | `/employers/{id}` | Get public employer/company profile | Public |
+// | `GET` | `/employers/{id}/reviews` | List reviews for a company | Public |
+// | `POST` | `/admin/employers/{id}/verify` | Grant verified badge to company |
+// Admin |
