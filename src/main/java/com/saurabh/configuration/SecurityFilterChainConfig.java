@@ -35,7 +35,8 @@ public class SecurityFilterChainConfig {
         // Allowed origins (Frontend URLs)
         configuration.setAllowedOriginPatterns(List.of(
             "http://localhost:5173",      // React default
-            "https://job-portal-backend-production-1bc7.up.railway.app"   // Production URL
+            "https://job-portal-frontend-mocha-ten.vercel.app", // Specific Vercel App
+            "https://*.vercel.app"        // Wildcard for Vercel preview/branch builds
         ));
         
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
