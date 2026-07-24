@@ -84,7 +84,7 @@ public class SecurityFilterChainConfig {
         httpSecurity.sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        httpSecurity.addFilterBefore(rateLimitingFilter, JWTAuthenticationFilter.class);
+        httpSecurity.addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class);
         httpSecurity.addFilterBefore(jwtAuthenticationfilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
