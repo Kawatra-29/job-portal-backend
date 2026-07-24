@@ -21,11 +21,14 @@ public class SecurityFilterChainConfig {
 
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final JWTAuthenticationFilter jwtAuthenticationfilter;
+    private final RateLimitingFilter rateLimitingFilter;
 
     public SecurityFilterChainConfig(AuthenticationEntryPoint authenticationEntryPoint,
-            JWTAuthenticationFilter jwtAuthenticationFilter) {
+            JWTAuthenticationFilter jwtAuthenticationFilter,
+            RateLimitingFilter rateLimitingFilter) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.jwtAuthenticationfilter = jwtAuthenticationFilter;
+        this.rateLimitingFilter = rateLimitingFilter;
     }
     
     @Bean
@@ -81,6 +84,7 @@ public class SecurityFilterChainConfig {
         httpSecurity.sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
+        httpSecurity.addFilterBefore(rateLimitingFilter, JWTAuthenticationFilter.class);
         httpSecurity.addFilterBefore(jwtAuthenticationfilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
