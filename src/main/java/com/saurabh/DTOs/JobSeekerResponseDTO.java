@@ -12,6 +12,7 @@ public record JobSeekerResponseDTO(
         Integer yearsOfExperience,
         BigDecimal expectedSalary,
         String availability,
+        String resumeUrl,
         Set<SkillResponseDto> skills,
         UserResponseDTO user
 

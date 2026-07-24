@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.saurabh.DTOs.AuthRequestDto;
 import com.saurabh.DTOs.AuthResponseDto;
 import com.saurabh.DTOs.LoginDto;
+import com.saurabh.DTOs.ResetPasswordDto;
 import com.saurabh.ENUMS.AuthStatus;
 import com.saurabh.service.AuthService;
 
@@ -37,6 +38,41 @@ public class AuthController {
 		}
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(authResponseDto);
+	}
+
+	@PostMapping("/verify-otp")
+	public ResponseEntity<AuthResponseDto> verifyOtp(
+			@org.springframework.web.bind.annotation.RequestParam String email,
+			@org.springframework.web.bind.annotation.RequestParam String otp) {
+		var response = authService.verifyOtp(email, otp);
+		if (response.authStatus() == AuthStatus.INVALID_OR_EXPIRED_OTP) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+		return ResponseEntity.ok(response);
+	}
+
+	@PostMapping("/resend-otp")
+	public ResponseEntity<AuthResponseDto> resendOtp(
+			@org.springframework.web.bind.annotation.RequestParam String email) {
+		var response = authService.resendOtp(email);
+		return ResponseEntity.ok(response);
+	}
+
+	@PostMapping("/forgot-password")
+	public ResponseEntity<AuthResponseDto> forgotPassword(
+			@org.springframework.web.bind.annotation.RequestParam String email) {
+		var response = authService.forgotPassword(email);
+		return ResponseEntity.ok(response);
+	}
+
+	@PostMapping("/reset-password")
+	public ResponseEntity<AuthResponseDto> resetPassword(
+			@RequestBody ResetPasswordDto resetPasswordDto) {
+		var response = authService.resetPassword(resetPasswordDto);
+		if (response.authStatus() == AuthStatus.INVALID_OR_EXPIRED_OTP) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+		return ResponseEntity.ok(response);
 	}
 }
 

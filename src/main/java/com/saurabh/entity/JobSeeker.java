@@ -51,9 +51,6 @@ public class JobSeeker {
     @OneToMany(mappedBy = "jobSeeker", cascade = CascadeType.ALL, orphanRemoval = true)
     @com.fasterxml.jackson.annotation.JsonIgnore
     private List<Application> applications;
-//    private String resumeUrl;
-//    private String linkedinUrl;
-//
-//    private String githubUrl;
 
+    private String resumeUrl;
 }

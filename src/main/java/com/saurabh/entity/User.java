@@ -48,11 +48,9 @@ public class User implements UserDetails {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Employer employer;
 
-    // private String profilePictureUrl;
-    //
-    // private Boolean isVerified;
-    //
-    // private Boolean isActive;
+    @Builder.Default
+    @Column(name = "is_email_verified")
+    private Boolean isEmailVerified = false;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

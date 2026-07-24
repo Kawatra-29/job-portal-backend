@@ -31,6 +31,7 @@ public class AdminInitializer implements CommandLineRunner {
             admin.setRole(Role.ADMIN);
             admin.setPhone("8595886658");
             admin.setFullName("SAURABH");
+            admin.setIsEmailVerified(true);
 
             userRepository.save(admin);
         }

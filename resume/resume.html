@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saurabh Kawatra - Professional Resume</title>
+  
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+  
+  <style>
+    /* CSS Variables for Dynamic Customization */
+    :root {
+      /* Theme colors for the Dashboard UI */
+      --bg-dashboard: #0f172a;
+      --bg-panel: #1e293b;
+      --border-panel: #334155;
+      --text-dashboard-primary: #f8fafc;
+      --text-dashboard-secondary: #94a3b8;
+      
+      /* Resume Accent Customization */
+      --resume-accent: #0f172a; /* Default: Classic Black */
+      --resume-text-primary: #1e293b;
+      --resume-text-secondary: #475569;
+      --resume-border: #e2e8f0;
+      --resume-bg: #ffffff;
+      
+      /* Transitions */
+      --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Reset & Core Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-dashboard);
+      color: var(--text-dashboard-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Interactive Header Dashboard */
+    header.dashboard-header {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-panel);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-logo svg {
+      width: 24px;
+      height: 24px;
+      fill: #38bdf8;
+    }
+
+    .brand-logo h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    /* Premium Button Styles */
+    .btn {
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: var(--transition-smooth);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--bg-panel);
+      color: var(--text-dashboard-primary);
+      border: 1px solid var(--border-panel);
+    }
+
+    .btn-secondary:hover {
+      background: #334155;
+      border-color: #475569;
+    }
+
+    /* Main Container (Dashboard Grid) */
+    .dashboard-container {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      flex: 1;
+      height: calc(100vh - 65px);
+    }
+
+    /* Sidebar controls */
+    .control-sidebar {
+      background: #0f172a;
+      border-right: 1px solid var(--border-panel);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      overflow-y: auto;
+    }
+
+    .control-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .control-section h2 {
+      font-size: 0.875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dashboard-secondary);
+    }
+
+    /* Color Swatches */
+    .color-swatches {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+
+    .swatch {
+      height: 40px;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      position: relative;
+    }
+
+    .swatch:hover {
+      transform: scale(1.05);
+    }
+
+    .swatch.active {
+      border-color: #38bdf8;
+    }
+
+    .swatch-classic { background-color: #0f172a; }
+    .swatch-indigo { background-color: #4f46e5; }
+    .swatch-emerald { background-color: #059669; }
+    .swatch-slate { background-color: #475569; }
+
+    /* Custom Checkbox Checklist for ATS Rules */
+    .ats-checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-dashboard-secondary);
+    }
+
+    .checklist-item svg {
+      width: 16px;
+      height: 16px;
+      fill: #10b981;
+      flex-shrink: 0;
+    }
+
+    .printing-tips {
+      background: rgba(30, 41, 59, 0.5);
+      border-left: 3px solid #38bdf8;
+      padding: 0.75rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      color: var(--text-dashboard-secondary);
+    }
+
+    /* Resume Preview Container */
+    .preview-container {
+      background-color: #1e293b;
+      padding: 2rem;
+      overflow-y: auto;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    /* Resume Sheet (Simulated A4 Page) */
+    .resume-sheet {
+      background-color: var(--resume-bg);
+      color: var(--resume-text-primary);
+      width: 8.5in;
+      min-height: 11in;
+      padding: 0.6in 0.6in 0.6in 0.6in;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+      transition: var(--transition-smooth);
+      position: relative;
+    }
+
+    /* Resume Typography & Elements */
+    .resume-header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .resume-name {
+      font-family: 'Inter', sans-serif;
+      font-size: 24pt;
+      font-weight: 800;
+      color: var(--resume-accent);
+      letter-spacing: -0.03em;
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+    }
+
+    .resume-contact {
+      font-size: 9.5pt;
+      color: var(--resume-text-secondary);
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+
+    .resume-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.8rem;
+      font-size: 9.5pt;
+      color: var(--resume-text-secondary);
+    }
+
+    .resume-links a {
+      color: var(--resume-accent);
+      text-decoration: none;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .resume-links a:hover {
+      text-decoration: underline;
+    }
+
+    .resume-links span.separator {
+      color: #cbd5e1;
+    }
+
+    /* Section Styling */
+    .resume-section {
+      margin-top: 1rem;
+    }
+
+    .section-title {
+      font-family: 'Inter', sans-serif;
+      font-size: 11pt;
+      font-weight: 700;
+      color: var(--resume-accent);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-bottom: 1.5px solid var(--resume-accent);
+      padding-bottom: 3px;
+      margin-bottom: 0.6rem;
+    }
+
+    .summary-text {
+      font-size: 9.5pt;
+      line-height: 1.45;
+      text-align: justify;
+      color: var(--resume-text-primary);
+    }
+
+    /* Standard Job/Project Layout */
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: var(--resume-text-primary);
+      margin-bottom: 2px;
+    }
+
+    .item-subheader {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 9.5pt;
+      font-style: italic;
+      color: var(--resume-text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .item-title {
+      font-weight: 700;
+    }
+
+    .item-details {
+      font-weight: 500;
+    }
+
+    .item-date {
+      font-weight: 500;
+      font-style: normal;
+      color: var(--resume-text-primary);
+    }
+
+    /* Bullet lists */
+    .resume-bullets {
+      list-style-type: disc;
+      margin-left: 1.25rem;
+      font-size: 9.5pt;
+      line-height: 1.45;
+      color: var(--resume-text-primary);
+    }
+
+    .resume-bullets li {
+      margin-bottom: 3px;
+    }
+
+    .resume-bullets li strong {
+      color: var(--resume-accent);
+    }
+
+    /* Skills Grid */
+    .skills-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 9.5pt;
+      line-height: 1.45;
+    }
+
+    .skills-line {
+      color: var(--resume-text-primary);
+    }
+
+    .skills-line strong {
+      font-weight: 700;
+      color: var(--resume-accent);
+      min-width: 140px;
+      display: inline-block;
+    }
+
+    /* Print styling rules */
+    @media print {
+      body {
+        background: #ffffff;
+        color: #000000;
+      }
+
+      /* Hide all dashboard UI controls */
+      header.dashboard-header,
+      .control-sidebar {
+        display: none !important;
+      }
+
+      .dashboard-container {
+        display: block;
+        height: auto;
+      }
+
+      .preview-container {
+        padding: 0;
+        background: none;
+        overflow: visible;
+      }
+
+      .resume-sheet {
+        width: 100%;
+        min-height: 0;
+        box-shadow: none;
+        padding: 0; /* Let the printer settings handle margins or keep clean */
+        margin: 0;
+      }
+
+      /* Ensure print uses true black/gray colors for ATS parsers */
+      :root {
+        --resume-accent: #000000 !important;
+        --resume-text-primary: #111111 !important;
+        --resume-text-secondary: #333333 !important;
+      }
+      
+      /* Avoid page breaks inside experience/project blocks */
+      .resume-section {
+        page-break-inside: avoid;
+      }
+    }
+
+    /* Responsive scaling for viewport display */
+    @media (max-width: 1200px) {
+      .dashboard-container {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .control-sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border-panel);
+      }
+      .preview-container {
+        padding: 1rem;
+      }
+      .resume-sheet {
+        width: 100%;
+        max-width: 8.5in;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dashboard Header -->
+  <header class="dashboard-header">
+    <div class="brand-logo">
+      <svg viewBox="0 0 24 24">
+        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+      </svg>
+      <h1>ATS Pro Resume</h1>
+    </div>
+    <div class="header-actions">
+      <button id="btnPrint" class="btn btn-primary" onclick="window.print()">
+        <svg style="width:16px; height:16px; fill:currentColor" viewBox="0 0 24 24">
+          <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v2h12V3z"/>
+        </svg>
+        Print / Save PDF
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <div class="dashboard-container">
+    
+    <!-- Sidebar Controls -->
+    <aside class="control-sidebar">
+      
+      <!-- Theme Selection -->
+      <div class="control-section">
+        <h2>Accent Color</h2>
+        <div class="color-swatches">
+          <div id="accent-classic" class="swatch swatch-classic active" onclick="setAccent('#0f172a', 'accent-classic')" title="Classic Black"></div>
+          <div id="accent-indigo" class="swatch swatch-indigo" onclick="setAccent('#4f46e5', 'accent-indigo')" title="Indigo Modern"></div>
+          <div id="accent-emerald" class="swatch swatch-emerald" onclick="setAccent('#059669', 'accent-emerald')" title="Emerald Tech"></div>
+          <div id="accent-slate" class="swatch swatch-slate" onclick="setAccent('#475569', 'accent-slate')" title="Elegant Slate"></div>
+        </div>
+      </div>
+
+      <!-- ATS Checker Checklist -->
+      <div class="control-section">
+        <h2>ATS-Friendly Checklist</h2>
+        <div class="ats-checklist">
+          <div class="checklist-item">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            Single-Column Layout
+          </div>
+          <div class="checklist-item">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            Standard Heading Keywords
+          </div>
+          <div class="checklist-item">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            No text boxes, shapes, icons
+          </div>
+          <div class="checklist-item">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            Text-extractable PDF support
+          </div>
+        </div>
+      </div>
+
+      <!-- Printing Tips -->
+      <div class="control-section">
+        <h2>PDF Export Tips</h2>
+        <div class="printing-tips">
+          1. Click the <strong>Print / Save PDF</strong> button.<br>
+          2. In the printer selection, choose <strong>Save as PDF</strong>.<br>
+          3. Set Margins to <strong>Default</strong> or <strong>None</strong>.<br>
+          4. Turn off <strong>Headers & Footers</strong>.<br>
+          5. Turn on <strong>Background graphics</strong> to preserve custom accent colors.
+        </div>
+      </div>
+      
+    </aside>
+
+    <!-- Resume Sheet Preview -->
+    <main class="preview-container">
+      
+      <div class="resume-sheet" id="resumeContent">
+        
+        <!-- Header -->
+        <div class="resume-header">
+          <div class="resume-name">Saurabh Kawatra</div>
+          <div class="resume-contact">
+            Ghaziabad, India &bull; +91 8595886658 &bull; <a href="mailto:saurabhkawatra2001@gmail.com">saurabhkawatra2001@gmail.com</a>
+          </div>
+          <div class="resume-links">
+            <a href="https://linkedin.com/in/saurabh-kawatra" target="_blank">linkedin.com/in/saurabh-kawatra</a>
+            <span class="separator">|</span>
+            <a href="https://github.com/Kawatra-29" target="_blank">github.com/Kawatra-29</a>
+            <span class="separator">|</span>
+            <a href="https://leetcode.com/u/saurabhkawatra/" target="_blank">leetcode.com/u/saurabhkawatra</a>
+            <span class="separator">|</span>
+            <a href="https://x.com/KawatraSaurabh" target="_blank">x.com/KawatraSaurabh</a>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="resume-section">
+          <div class="section-title">Professional Summary</div>
+          <div class="summary-text">
+            Detail-oriented Backend Developer with hands-on experience in building scalable microservices and web applications using Java (Spring Boot) and Python (Django). Proficient in designing robust RESTful APIs, implementing stateless JWT authentication, and engineering complex data pipelines (ELT) with PostgreSQL and MySQL. Strong foundational knowledge in React frontend integration and containerization using Docker. Adept at optimizing system performance, reducing API response times, and writing clean, maintainable code.
+          </div>
+        </div>
+
+        <!-- Technical Skills -->
+        <div class="resume-section">
+          <div class="section-title">Technical Skills</div>
+          <div class="skills-container">
+            <div class="skills-line">
+              <strong>Languages:</strong> Java, Python, SQL, HTML, CSS, JavaScript (ES6+)
+            </div>
+            <div class="skills-line">
+              <strong>Frameworks:</strong> Spring Boot, Spring Security, Spring MVC, Django, Django REST Framework (DRF), Hibernate (JPA), React
+            </div>
+            <div class="skills-line">
+              <strong>Databases:</strong> PostgreSQL, MySQL, MongoDB, Redis
+            </div>
+            <div class="skills-line">
+              <strong>Tools & DevOps:</strong> Docker, Docker Compose, Git, GitHub, Maven, Postman, JWT, MapStruct, OpenAPI (Swagger), RESTful APIs
+            </div>
+          </div>
+        </div>
+
+        <!-- Experience -->
+        <div class="resume-section">
+          <div class="section-title">Professional Experience</div>
+          
+          <div class="experience-item">
+            <div class="item-header">
+              <span class="item-title">Springer Capital</span>
+              <span class="item-date">Aug 2025 &ndash; Nov 2025</span>
+            </div>
+            <div class="item-subheader">
+              <span>Backend Developer Intern</span>
+              <span>Wilmette, Illinois (Remote)</span>
+            </div>
+            <ul class="resume-bullets">
+              <li>Designed and developed secure RESTful microservices and data ingestion modules using <strong>Django REST Framework</strong> and custom token-based authentication filters.</li>
+              <li>Engineered high-throughput <strong>Extract-Load-Transform (ELT)</strong> pipelines to aggregate API payload data and sync into optimized PostgreSQL and MySQL transactional databases.</li>
+              <li>Boosted system performance and reduced database query response times by <strong>25%</strong> through strategic query optimization, indexing, and logic profiling.</li>
+              <li>Refactored legacy codebases to improve maintainability, debugged backend logic, and authored comprehensive developer onboarding documentation.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Projects -->
+        <div class="resume-section">
+          <div class="section-title">Key Projects</div>
+          
+          <!-- Stride -->
+          <div class="project-item" style="margin-bottom: 0.75rem;">
+            <div class="item-header">
+              <span class="item-title">Stride &ndash; Full-Stack Job Portal Web Application</span>
+              <span class="item-date">Vite, React, Spring Boot, PostgreSQL, Docker</span>
+            </div>
+            <ul class="resume-bullets">
+              <li>Architected and implemented a secure, role-based backend (Admin, Employer, Job Seeker) featuring stateless <strong>JWT Authentication</strong> via Spring Security.</li>
+              <li>Developed a responsive React 19 frontend utilizing Tailwind CSS, React Router v7, and <strong>TanStack React Query</strong> for optimized server state synchronization and API fetching.</li>
+              <li>Designed the relational database schema and mappings using <strong>Hibernate/JPA</strong>, modeling complex entities including user profiles, jobs, application states, and skill directories.</li>
+              <li>Built dynamic, paginated search filter endpoints using <strong>JPA Specifications</strong> (Criteria API) to enable real-time searches across multiple dimensions.</li>
+              <li>Containerized application services using <strong>Docker</strong> and Docker Compose, achieving local multi-container parity with production environments on Railway.</li>
+            </ul>
+          </div>
+
+          <!-- Python DRF -->
+          <div class="project-item">
+            <div class="item-header">
+              <span class="item-title">Automated Data Sync & Ingestion Service</span>
+              <span class="item-date">Python, Django, PostgreSQL, Docker</span>
+            </div>
+            <ul class="resume-bullets">
+              <li>Developed a scheduling pipeline using Django for automating high-frequency API ingestion workflows from third-party vendor platforms.</li>
+              <li>Integrated concurrency handlers and background worker threads to parse, sanitize, and validate massive JSON schemas before relational DB persistence.</li>
+              <li>Designed granular monitoring logs and error-retry logic to guarantee over <strong>99.9%</strong> pipeline operational uptime.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Education -->
+        <div class="resume-section">
+          <div class="section-title">Education</div>
+          
+          <div class="education-item" style="margin-bottom: 0.5rem;">
+            <div class="item-header">
+              <span class="item-title">Indira Gandhi National Open University (IGNOU)</span>
+              <span class="item-date">2025 &ndash; 2027</span>
+            </div>
+            <div class="item-subheader">
+              <span>Master of Computer Applications (MCA)</span>
+              <span>New Delhi, India</span>
+            </div>
+          </div>
+
+          <div class="education-item">
+            <div class="item-header">
+              <span class="item-title">Chaudhary Charan Singh University</span>
+              <span class="item-date">2020 &ndash; 2024</span>
+            </div>
+            <div class="item-subheader">
+              <span>Bachelor of Science (B.Sc.), Major in Mathematics</span>
+              <span>Meerut, India</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    function setAccent(color, swatchId) {
+      document.documentElement.style.setProperty('--resume-accent', color);
+      
+      // Update active swatch highlight
+      document.querySelectorAll('.swatch').forEach(swatch => {
+        swatch.classList.remove('active');
+      });
+      document.getElementById(swatchId).classList.add('active');
+    }
+  </script>
+</body>
+</html>

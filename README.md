@@ -102,11 +102,16 @@ src/main/java/com/saurabh/
 
 ## 🔐 Authentication & Authorization
 
-Authentication is completely **stateless**. During login, the server returns a signed JWT. Clients must cache this token and supply it in the `Authorization` header of subsequent requests:
+Authentication is completely **stateless**. During login, the server checks if the user's email is verified before generating a signed JWT. Clients must cache this token and supply it in the `Authorization` header of subsequent requests:
 
 ```http
 Authorization: Bearer <your_jwt_token>
 ```
+
+### Key Auth Features
+- **Async OTP Email Verification**: Non-blocking asynchronous OTP dispatch via `@EnableAsync` and Spring Mail starter.
+- **2-Step Password Reset**: 15-minute expiring OTP tokens for secure password resets without unauthenticated access.
+- **Account Self-Deletion**: `DELETE /api/v1/users/me` endpoint cascading deletion for user data privacy.
 
 ### Roles and Scope Matrix
 

@@ -1,5 +1,10 @@
 package com.saurabh.service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
@@ -10,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.saurabh.DTOs.JobSeekerDto;
 import com.saurabh.DTOs.JobSeekerResponseDTO;
@@ -71,11 +77,11 @@ public class JobSeekerService {
 				profile.getYearsOfExperience(),
 				profile.getExpectedSalary(),
 				profile.getAvailability() != null ? profile.getAvailability().name() : null,
+				profile.getResumeUrl(),
 				skills,
 				userDto);
 
 		return ResponseEntity.ok(response);
-
 	}
 
 	@Transactional
@@ -177,6 +183,48 @@ public class JobSeekerService {
 				.orElseThrow(() -> new RuntimeException("Skill not assigned"));
 
 		jobSeekerSkillRepository.delete(jobSeekerSkill);
+	}
+
+	@Transactional
+	public String uploadResume(MultipartFile file, UserDetails userDetails) {
+		if (file == null || file.isEmpty()) {
+			throw new IllegalArgumentException("File cannot be empty");
+		}
+
+		String originalFilename = file.getOriginalFilename();
+		String fileExtension = "";
+		if (originalFilename != null && originalFilename.contains(".")) {
+			fileExtension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+		}
+
+		if (!fileExtension.equals(".pdf") && !fileExtension.equals(".doc") && !fileExtension.equals(".docx")) {
+			throw new IllegalArgumentException("Only PDF, DOC, and DOCX files are allowed");
+		}
+
+		try {
+			Path uploadPath = Paths.get("uploads/resumes");
+			if (!Files.exists(uploadPath)) {
+				Files.createDirectories(uploadPath);
+			}
+
+			String cleanFileName = System.currentTimeMillis() + "_" + (originalFilename != null ? originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_") : "resume.pdf");
+			Path filePath = uploadPath.resolve(cleanFileName);
+			Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+			String resumeUrl = "/uploads/resumes/" + cleanFileName;
+
+			JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername());
+			if (jobSeeker == null) {
+				throw new ResourceNotFoundException("JobSeeker profile not found");
+			}
+
+			jobSeeker.setResumeUrl(resumeUrl);
+			jobseekerRepository.save(jobSeeker);
+
+			return resumeUrl;
+		} catch (IOException e) {
+			throw new RuntimeException("Failed to store resume file: " + e.getMessage(), e);
+		}
 	}
 
 }

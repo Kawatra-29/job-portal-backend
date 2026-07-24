@@ -40,6 +40,7 @@ public class DataSeeder implements CommandLineRunner {
                     .passwordHash(passwordEncoder.encode("password123"))
                     .role(Role.JOBSEEKER)
                     .phone("90000000" + String.format("%02d", i))
+                    .isEmailVerified(true)
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();
@@ -71,6 +72,7 @@ public class DataSeeder implements CommandLineRunner {
                     .passwordHash(passwordEncoder.encode("password123"))
                     .role(Role.EMPLOYER)
                     .phone("80000000" + String.format("%02d", i))
+                    .isEmailVerified(true)
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();

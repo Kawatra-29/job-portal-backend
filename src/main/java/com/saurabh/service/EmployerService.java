@@ -50,6 +50,38 @@ public class EmployerService {
 				.stream().map(jobMapper::toDTO).collect(Collectors.toList());
 	}
 
+	private JobSeekerResponseDTO mapJobSeekerToDto(JobSeeker profile) {
+		if (profile == null) return null;
+
+		Set<SkillResponseDto> skills = Optional.ofNullable(profile.getSkills())
+				.orElse(Collections.emptySet())
+				.stream()
+				.map(jsSkill -> new SkillResponseDto(
+						jsSkill.getSkill().getName(),
+						jsSkill.getProficiencyLevel()))
+				.collect(Collectors.toSet());
+
+		var user = profile.getUser();
+		UserResponseDTO userDto = user != null ? new UserResponseDTO(
+				user.getId(),
+				user.getFullName(),
+				user.getEmail(),
+				user.getPhone(),
+				user.getRole().name()) : null;
+
+		return new JobSeekerResponseDTO(
+				profile.getId(),
+				profile.getHeadline(),
+				profile.getSummary(),
+				profile.getLocation(),
+				profile.getYearsOfExperience(),
+				profile.getExpectedSalary(),
+				profile.getAvailability() != null ? profile.getAvailability().name() : null,
+				profile.getResumeUrl(),
+				skills,
+				userDto);
+	}
+
 	@Transactional(readOnly = true)
 	public List<ApplicationResponseDto> getApplications(@NonNull Long jobId, UserDetails userDetails) {
 		Employer employer = employerRepository.findByUser_Email(userDetails.getUsername())
@@ -64,47 +96,15 @@ public class EmployerService {
 		}
 
 		return applicationRepository.findByJobId(jobId).stream()
-				.map(a -> {
-					JobSeeker profile = a.getJobSeeker();
-					JobSeekerResponseDTO jobSeekerDto = null;
-					if (profile != null) {
-						Set<SkillResponseDto> skills = Optional.ofNullable(profile.getSkills())
-								.orElse(Collections.emptySet())
-								.stream()
-								.map(jsSkill -> new SkillResponseDto(
-										jsSkill.getSkill().getName(),
-										jsSkill.getProficiencyLevel()))
-								.collect(Collectors.toSet());
-
-						var user = profile.getUser();
-						UserResponseDTO userDto = user != null ? new UserResponseDTO(
-								user.getId(),
-								user.getFullName(),
-								user.getEmail(),
-								user.getPhone(),
-								user.getRole().name()) : null;
-
-						jobSeekerDto = new JobSeekerResponseDTO(
-								profile.getId(),
-								profile.getHeadline(),
-								profile.getSummary(),
-								profile.getLocation(),
-								profile.getYearsOfExperience(),
-								profile.getExpectedSalary(),
-								profile.getAvailability() != null ? profile.getAvailability().name() : null,
-								skills,
-								userDto);
-					}
-
-					return new ApplicationResponseDto(
+				.map(a -> new ApplicationResponseDto(
 							a.getId(),
 							a.getJob().getId(),
 							a.getJob().getTitle(),
 							a.getJob().getEmployer().getCompanyName(),
 							a.getStatus(),
 							a.getAppliedAt(),
-							jobSeekerDto);
-				}).collect(Collectors.toList());
+							mapJobSeekerToDto(a.getJobSeeker())))
+				.collect(Collectors.toList());
 	}
 
 	@Transactional(readOnly = true)
@@ -124,16 +124,6 @@ public class EmployerService {
 		employer.setDescription(request.description());
 		employer.setCompanySize(request.companySize());
 
-		// FIX 7: Removed employer.setIsVerified(false) that was here before.
-		//
-		// Before: every time an employer updated their profile (even just changing
-		// the description), their verification badge was reset to false.
-		// That meant admin had to re-verify after every single profile edit — terrible
-		// UX.
-		//
-		// Fix: don't touch isVerified at all during a normal profile update.
-		// Verification is admin's job via POST /api/v1/admin/employers/{id}/verify.
-
 		return employerRepository.save(employer);
 	}
 
@@ -151,7 +141,6 @@ public class EmployerService {
 		Employer employer = employerRepository.findByUser_Email(userDetails.getUsername())
 				.orElseThrow(() -> new ResourceNotFoundException("Employer not found"));
 
-		// Yeh already exist karta hai - ek hi query mein sab fetch
 		List<Job> jobs = jobRepository.findByEmployerIdWithApplications(employer.getId());
 
 		return jobs.stream()
@@ -163,7 +152,7 @@ public class EmployerService {
 								employer.getCompanyName(),
 								a.getStatus(),
 								a.getAppliedAt(),
-								null // jobSeekerDto add karo zaroorat ho to
+								mapJobSeekerToDto(a.getJobSeeker())
 						)))
 				.collect(Collectors.toList());
 	}
