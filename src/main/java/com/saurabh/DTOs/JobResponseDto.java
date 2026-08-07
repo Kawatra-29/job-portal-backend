@@ -19,5 +19,6 @@ public record JobResponseDto(
         String currency,
         LocalDate deadline,
         String companyName,
-        Boolean isVerified
+        Boolean isVerified,
+        Long viewsCount
 ) {}

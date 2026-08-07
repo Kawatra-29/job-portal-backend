@@ -53,6 +53,12 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password");
     }
 
+    // Invalid argument or validation failure
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     // Catch-all for anything unexpected — still 500, but at least it's structured JSON
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(RuntimeException ex) {
@@ -65,7 +71,7 @@ public class GlobalExceptionHandler {
                         "timestamp", LocalDateTime.now().toString(),
                         "status", status.value(),
                         "error", status.getReasonPhrase(),
-                        "message", message),
+                        "message", message != null ? message : ""),
                 status);
     }
 }

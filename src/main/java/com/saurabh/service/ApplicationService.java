@@ -1,7 +1,6 @@
 package com.saurabh.service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
@@ -44,6 +43,12 @@ public class ApplicationService {
 	@Autowired
 	private JobMapper jobMapper;
 
+	@Autowired(required = false)
+	private org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
+
+	private static final int MAX_APPLICATIONS_PER_HOUR = 20;
+	private static final String APPLICATION_LIMIT_PREFIX = "rate_limit:apply:";
+
 	@SuppressWarnings("null")
 	@Transactional
 	public void applyJob(@NonNull Long jobId, UserDetails userDetails) {
@@ -55,6 +60,24 @@ public class ApplicationService {
 
 		JobSeeker jobSeeker = jobseekerRepository.findByUser(user)
 				.orElseThrow(() -> new ResourceNotFoundException("JobSeeker profile not found"));
+
+		// Rate limiting check: Max 20 job applications per hour per candidate
+		if (redisTemplate != null) {
+			try {
+				String key = APPLICATION_LIMIT_PREFIX + jobSeeker.getId();
+				Long count = redisTemplate.opsForValue().increment(key);
+				if (count != null && count == 1) {
+					redisTemplate.expire(key, 1, java.util.concurrent.TimeUnit.HOURS);
+				}
+				if (count != null && count > MAX_APPLICATIONS_PER_HOUR) {
+					throw new IllegalStateException("Job application limit exceeded (Max " + MAX_APPLICATIONS_PER_HOUR + " applications per hour)");
+				}
+			} catch (IllegalStateException e) {
+				throw e;
+			} catch (Exception e) {
+				// Log & continue if Redis is offline
+			}
+		}
 
 		if (applicationRepository.existsByJobAndJobSeeker(job, jobSeeker)) {
 			throw new IllegalStateException("You have already applied for this job");
@@ -88,10 +111,9 @@ public class ApplicationService {
 
 	@Transactional(readOnly = true)
 	public List<MyApplicationResponseDto> getMyApplications(UserDetails userDetails) {
-		Optional<JobSeeker> jobSeekerOpt = Optional
-				.ofNullable(jobseekerRepository.findByUser_Email(userDetails.getUsername()));
-		List<Application> apps = jobSeekerOpt.map(applicationRepository::findByJobSeeker)
+		JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername())
 				.orElseThrow(() -> new ResourceNotFoundException("JobSeeker profile not found"));
+		List<Application> apps = applicationRepository.findByJobSeeker(jobSeeker);
 		return apps.stream()
 				.map(app -> new MyApplicationResponseDto(
 						app.getId(),
@@ -106,9 +128,8 @@ public class ApplicationService {
 		Application application = applicationRepository.findById(applicationId)
 				.orElseThrow(() -> new ResourceNotFoundException("Application not found: " + applicationId));
 
-		JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername());
-		if (jobSeeker == null)
-			throw new ResourceNotFoundException("JobSeeker profile not found");
+		JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername())
+				.orElseThrow(() -> new ResourceNotFoundException("JobSeeker profile not found"));
 
 		if (!application.getJobSeeker().getId().equals(jobSeeker.getId())) {
 			throw new org.springframework.security.access.AccessDeniedException(

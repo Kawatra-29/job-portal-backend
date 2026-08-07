@@ -2,8 +2,6 @@ package com.saurabh.configuration;
 
 import java.io.IOException;
 import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,15 +15,16 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Cookie;
 
 @Component
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
-	@Autowired
-	private JwtUtils jwtUtils;
+	private final JwtUtils jwtUtils;
 	private final UserDetailsService userDetailsService;
 
-	public JWTAuthenticationFilter(UserDetailsService userDetailsService) {
+	public JWTAuthenticationFilter(JwtUtils jwtUtils, UserDetailsService userDetailsService) {
+		this.jwtUtils = jwtUtils;
 		this.userDetailsService = userDetailsService;
 	}
 
@@ -52,7 +51,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
 		// validate this token -> JWT UTILS
 		jwttokenoptional.ifPresent(jwtToken -> {
-			if (jwtUtils.validateToken(jwtToken)) {
+			if (!jwtUtils.isTokenBlacklisted(jwtToken) && jwtUtils.validateToken(jwtToken)) {
 				// get username from jwt token
 				var username = jwtUtils.getUsernameFromToken(jwtToken);
 
@@ -77,9 +76,17 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 	}
 
 	private Optional<String> getTokenFromRequest(HttpServletRequest request) {
-		// Extract Authen Header
+		// 1. Check cookies first
+		if (request.getCookies() != null) {
+			for (Cookie cookie : request.getCookies()) {
+				if ("authToken".equals(cookie.getName()) && cookie.getValue() != null && !cookie.getValue().isEmpty()) {
+					return Optional.of(cookie.getValue());
+				}
+			}
+		}
+
+		// 2. Fallback to Authorization Header
 		var authheader = request.getHeader(HttpHeaders.AUTHORIZATION);
-		/// jwt token is coming in the form "BEARER <JWT TOKEN>"
 		if (authheader != null && !authheader.isEmpty() && authheader.toLowerCase().startsWith("bearer ")) {
 			return Optional.of(authheader.substring(7));
 		}

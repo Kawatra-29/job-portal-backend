@@ -14,5 +14,5 @@ public interface JobseekerRepository extends JpaRepository<JobSeeker, Long> {
 	
 	Optional<JobSeeker> findByUser(User user);
 
-	JobSeeker findByUser_Email(String email);
+	Optional<JobSeeker> findByUser_Email(String email);
 }

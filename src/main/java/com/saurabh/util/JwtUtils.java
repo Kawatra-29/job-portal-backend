@@ -31,7 +31,14 @@ public class JwtUtils {
 
     private SecretKey secretKey;
     
+    private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
+    
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
+    private static final String BLACKLIST_PREFIX = "jwt_blacklist:";
+
+    public JwtUtils(org.springframework.data.redis.core.StringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     @PostConstruct
     public void init() {
@@ -75,6 +82,37 @@ public class JwtUtils {
     public String getUsernameFromToken(String jwtToken) {
         Claims claims = parseToken(jwtToken);
         return claims != null ? claims.getSubject() : null;
+    }
+
+    public void blacklistToken(String jwtToken) {
+        if (jwtToken == null || jwtToken.isEmpty()) return;
+        try {
+            Claims claims = parseToken(jwtToken);
+            long remainingMs = jwtExpiration;
+            if (claims != null && claims.getExpiration() != null) {
+                long diff = claims.getExpiration().getTime() - System.currentTimeMillis();
+                if (diff > 0) remainingMs = diff;
+            }
+            if (redisTemplate != null) {
+                redisTemplate.opsForValue().set(BLACKLIST_PREFIX + jwtToken, "true", remainingMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+                logger.info("Blacklisted JWT token in Redis for remaining {} ms", remainingMs);
+            }
+        } catch (Exception e) {
+            logger.warn("Could not blacklist token in Redis: {}", e.getMessage());
+        }
+    }
+
+    public boolean isTokenBlacklisted(String jwtToken) {
+        if (jwtToken == null || jwtToken.isEmpty()) return false;
+        try {
+            if (redisTemplate != null) {
+                Boolean isBlacklisted = redisTemplate.hasKey(BLACKLIST_PREFIX + jwtToken);
+                return Boolean.TRUE.equals(isBlacklisted);
+            }
+        } catch (Exception e) {
+            logger.warn("Redis error checking blacklisted token: {}", e.getMessage());
+        }
+        return false;
     }
 
     public String generateToken(User user) {  // no longer static

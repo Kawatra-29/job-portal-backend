@@ -3,8 +3,12 @@ package com.saurabh.service;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,6 +38,10 @@ import jakarta.transaction.Transactional;
 @Service
 public class AuthService {
 
+	private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
+	private static final String OTP_PREFIX = "OTP:";
+	private static final String RESET_PREFIX = "RESET:";
+
 	private JobseekerRepository jobseekerRepository;
 	private EmployerRepository employerRepository;
 	private JwtUtils jwtUtils;
@@ -49,6 +57,9 @@ public class AuthService {
 
 	@Autowired
 	private EmailService emailService;
+
+	@Autowired(required = false)
+	private StringRedisTemplate redisTemplate;
 
 	private final Random random = new SecureRandom();
 
@@ -125,15 +136,9 @@ public class AuthService {
 			employerRepository.save(employer);
 		}
 
-		// 4️⃣ Generate 6-Digit OTP
+		// 4️⃣ Generate 6-Digit OTP & Store in Redis with 5 min TTL
 		String otp = String.format("%06d", random.nextInt(1000000));
-
-		OtpVerification otpRecord = otpRepository.findByEmail(normalizedEmail)
-				.orElse(new OtpVerification());
-		otpRecord.setEmail(normalizedEmail);
-		otpRecord.setOtp(otp);
-		otpRecord.setExpiryTime(LocalDateTime.now().plusMinutes(5));
-		otpRepository.save(otpRecord);
+		saveOtpWithTtl(normalizedEmail, otp, 5);
 
 		// 5️⃣ Send Email
 		emailService.sendOtpEmail(normalizedEmail, otp);
@@ -146,10 +151,9 @@ public class AuthService {
 		String normalizedEmail = email != null ? email.trim().toLowerCase() : "";
 		String trimmedOtp = inputOtp != null ? inputOtp.trim() : "";
 
-		OtpVerification otpRecord = otpRepository.findByEmail(normalizedEmail)
-				.orElse(null);
+		boolean isValid = validateAndClearOtp(normalizedEmail, trimmedOtp);
 
-		if (otpRecord == null || LocalDateTime.now().isAfter(otpRecord.getExpiryTime()) || !otpRecord.getOtp().equals(trimmedOtp)) {
+		if (!isValid) {
 			return new AuthResponseDto(null, AuthStatus.INVALID_OR_EXPIRED_OTP, null);
 		}
 
@@ -158,8 +162,6 @@ public class AuthService {
 
 		user.setIsEmailVerified(true);
 		userRepository.save(user);
-
-		otpRepository.delete(otpRecord);
 
 		String token = jwtUtils.generateToken(user);
 		return new AuthResponseDto(token, AuthStatus.OTP_VERIFIED_SUCCESSFULLY, user.getRole());
@@ -176,13 +178,7 @@ public class AuthService {
 		}
 
 		String otp = String.format("%06d", random.nextInt(1000000));
-
-		OtpVerification otpRecord = otpRepository.findByEmail(normalizedEmail)
-				.orElse(new OtpVerification());
-		otpRecord.setEmail(normalizedEmail);
-		otpRecord.setOtp(otp);
-		otpRecord.setExpiryTime(LocalDateTime.now().plusMinutes(5));
-		otpRepository.save(otpRecord);
+		saveOtpWithTtl(normalizedEmail, otp, 5);
 
 		emailService.sendOtpEmail(normalizedEmail, otp);
 
@@ -196,13 +192,7 @@ public class AuthService {
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No account found with this email address"));
 
 		String otp = String.format("%06d", random.nextInt(1000000));
-
-		PasswordResetToken resetToken = passwordResetRepository.findByEmail(normalizedEmail)
-				.orElse(new PasswordResetToken());
-		resetToken.setEmail(normalizedEmail);
-		resetToken.setOtp(otp);
-		resetToken.setExpiryTime(LocalDateTime.now().plusMinutes(15));
-		passwordResetRepository.save(resetToken);
+		saveResetTokenWithTtl(normalizedEmail, otp, 15);
 
 		emailService.sendPasswordResetEmail(normalizedEmail, otp);
 
@@ -214,10 +204,9 @@ public class AuthService {
 		String normalizedEmail = request.email() != null ? request.email().trim().toLowerCase() : "";
 		String trimmedOtp = request.otp() != null ? request.otp().trim() : "";
 
-		PasswordResetToken resetToken = passwordResetRepository.findByEmail(normalizedEmail)
-				.orElse(null);
+		boolean isValid = validateAndClearResetToken(normalizedEmail, trimmedOtp);
 
-		if (resetToken == null || LocalDateTime.now().isAfter(resetToken.getExpiryTime()) || !resetToken.getOtp().equals(trimmedOtp)) {
+		if (!isValid) {
 			return new AuthResponseDto(null, AuthStatus.INVALID_OR_EXPIRED_OTP, null);
 		}
 
@@ -227,8 +216,87 @@ public class AuthService {
 		user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
 		userRepository.save(user);
 
-		passwordResetRepository.delete(resetToken);
-
 		return new AuthResponseDto(null, AuthStatus.PASSWORD_RESET_SUCCESSFULLY, user.getRole());
 	}
+	@SuppressWarnings("null")
+	private void saveOtpWithTtl(String email, String otp, int minutes) {
+		try {
+			if (redisTemplate != null) {
+				redisTemplate.opsForValue().set(OTP_PREFIX + email, otp, minutes, TimeUnit.MINUTES);
+				logger.info("Saved OTP to Redis for email: {} with TTL {} mins", email, minutes);
+				return;
+			}
+		} catch (Exception e) {
+			logger.warn("Redis unavailable for saving OTP, falling back to DB: {}", e.getMessage());
+		}
+
+		// Fallback to DB
+		OtpVerification otpRecord = otpRepository.findByEmail(email).orElse(new OtpVerification());
+		otpRecord.setEmail(email);
+		otpRecord.setOtp(otp);
+		otpRecord.setExpiryTime(LocalDateTime.now().plusMinutes(minutes));
+		otpRepository.save(otpRecord);
+	}
+
+	private boolean validateAndClearOtp(String email, String inputOtp) {
+		try {
+			if (redisTemplate != null) {
+				String cachedOtp = redisTemplate.opsForValue().get(OTP_PREFIX + email);
+				if (cachedOtp != null && cachedOtp.equals(inputOtp)) {
+					redisTemplate.delete(OTP_PREFIX + email);
+					return true;
+				}
+			}
+		} catch (Exception e) {
+			logger.warn("Redis unavailable for OTP validation, checking DB: {}", e.getMessage());
+		}
+
+		// Fallback check against DB
+		OtpVerification otpRecord = otpRepository.findByEmail(email).orElse(null);
+		if (otpRecord != null && !LocalDateTime.now().isAfter(otpRecord.getExpiryTime()) && otpRecord.getOtp().equals(inputOtp)) {
+			otpRepository.delete(otpRecord);
+			return true;
+		}
+		return false;
+	}
+
+	private void saveResetTokenWithTtl(String email, String otp, int minutes) {
+		try {
+			if (redisTemplate != null) {
+				redisTemplate.opsForValue().set(RESET_PREFIX + email, otp, minutes, TimeUnit.MINUTES);
+				logger.info("Saved Password Reset Token to Redis for email: {} with TTL {} mins", email, minutes);
+				return;
+			}
+		} catch (Exception e) {
+			logger.warn("Redis unavailable for saving Reset Token, falling back to DB: {}", e.getMessage());
+		}
+
+		PasswordResetToken resetToken = passwordResetRepository.findByEmail(email).orElse(new PasswordResetToken());
+		resetToken.setEmail(email);
+		resetToken.setOtp(otp);
+		resetToken.setExpiryTime(LocalDateTime.now().plusMinutes(minutes));
+		passwordResetRepository.save(resetToken);
+	}
+
+	private boolean validateAndClearResetToken(String email, String inputOtp) {
+		try {
+			if (redisTemplate != null) {
+				String cachedToken = redisTemplate.opsForValue().get(RESET_PREFIX + email);
+				if (cachedToken != null && cachedToken.equals(inputOtp)) {
+					redisTemplate.delete(RESET_PREFIX + email);
+					return true;
+				}
+			}
+		} catch (Exception e) {
+			logger.warn("Redis unavailable for Reset Token validation, checking DB: {}", e.getMessage());
+		}
+
+		PasswordResetToken resetToken = passwordResetRepository.findByEmail(email).orElse(null);
+		if (resetToken != null && !LocalDateTime.now().isAfter(resetToken.getExpiryTime()) && resetToken.getOtp().equals(inputOtp)) {
+			passwordResetRepository.delete(resetToken);
+			return true;
+		}
+		return false;
+	}
 }
+

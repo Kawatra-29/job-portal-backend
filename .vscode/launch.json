@@ -2,13 +2,12 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Spring Boot-myapp<job-portal-backend>",
+            "name": "Spring Boot App",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "mainClass": "com.saurabh.myapp",
             "projectName": "job-portal-backend",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env"
+            "args": ""
         }
     ]
 }

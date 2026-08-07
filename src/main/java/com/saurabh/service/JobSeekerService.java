@@ -48,9 +48,8 @@ public class JobSeekerService {
 	@Transactional(readOnly = true)
 	public ResponseEntity<JobSeekerResponseDTO> getProfile(UserDetails userDetails) {
 
-		JobSeeker profile = jobseekerRepository.findByUser_Email(userDetails.getUsername());
-		if (profile == null)
-			throw new ResourceNotFoundException("JobSeeker profile not found");
+		JobSeeker profile = jobseekerRepository.findByUser_Email(userDetails.getUsername())
+				.orElseThrow(() -> new ResourceNotFoundException("JobSeeker profile not found"));
 
 		Set<SkillResponseDto> skills = Optional.ofNullable(profile.getSkills())
 				.orElse(Collections.emptySet())
@@ -88,9 +87,9 @@ public class JobSeekerService {
 	public JobSeeker update(JobSeekerDto jobSeekerDto, UserDetails userDetails) {
 
 		User user = userRepository.findByEmail(userDetails.getUsername())
-				.orElseThrow(() -> new RuntimeException("User not found"));
+				.orElseThrow(() -> new ResourceNotFoundException("User not found"));
 		JobSeeker jobSeekerProfile2 = jobseekerRepository.findByUser(user)
-				.orElseThrow(() -> new RuntimeException("Profile not found"));
+				.orElseThrow(() -> new ResourceNotFoundException("Profile not found"));
 
 		jobSeekerProfile2.setAvailability(jobSeekerDto.availability());
 		jobSeekerProfile2.setExpectedSalary(jobSeekerDto.expectedSalary());
@@ -99,26 +98,28 @@ public class JobSeekerService {
 		jobSeekerProfile2.setSummary(jobSeekerDto.summary());
 		jobSeekerProfile2.setYearsOfExperience(jobSeekerDto.yearsOfExperience());
 
-		Set<JobSeekerSkill> skills = jobSeekerDto.skills().stream().map(skillDto -> {
+		if (jobSeekerDto.skills() != null) {
+			Set<JobSeekerSkill> skills = jobSeekerDto.skills().stream().map(skillDto -> {
 
-			@SuppressWarnings("null")
-			Skill skill = skillRepository.findById(skillDto.skillId())
-					.orElseThrow(() -> new ResourceNotFoundException("Skill not found"));
+				@SuppressWarnings("null")
+				Skill skill = skillRepository.findById(skillDto.skillId())
+						.orElseThrow(() -> new ResourceNotFoundException("Skill not found"));
 
-			JobSeekerSkill jsSkill = new JobSeekerSkill();
-			jsSkill.setJobSeeker(jobSeekerProfile2);
-			jsSkill.setSkill(skill);
-			jsSkill.setProficiencyLevel(skillDto.level());
+				JobSeekerSkill jsSkill = new JobSeekerSkill();
+				jsSkill.setJobSeeker(jobSeekerProfile2);
+				jsSkill.setSkill(skill);
+				jsSkill.setProficiencyLevel(skillDto.level());
 
-			return jsSkill;
+				return jsSkill;
 
-		}).collect(Collectors.toSet());
+			}).collect(Collectors.toSet());
 
-		if (jobSeekerProfile2.getSkills() != null) {
-			jobSeekerProfile2.getSkills().clear();
-			jobSeekerProfile2.getSkills().addAll(skills);
-		} else {
-			jobSeekerProfile2.setSkills(skills);
+			if (jobSeekerProfile2.getSkills() != null) {
+				jobSeekerProfile2.getSkills().clear();
+				jobSeekerProfile2.getSkills().addAll(skills);
+			} else {
+				jobSeekerProfile2.setSkills(skills);
+			}
 		}
 
 		jobseekerRepository.save(jobSeekerProfile2);
@@ -128,10 +129,10 @@ public class JobSeekerService {
 	@Transactional(readOnly = true)
 	public Set<SkillResponseDto> getSkills(UserDetails userDetails) {
 		User user = userRepository.findByEmail(userDetails.getUsername())
-				.orElseThrow(() -> new RuntimeException("User not found"));
+				.orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
 		JobSeeker jobSeekerProfile = jobseekerRepository.findByUser(user)
-				.orElseThrow(() -> new RuntimeException("Profile not found"));
+				.orElseThrow(() -> new ResourceNotFoundException("Profile not found"));
 
 		return jobSeekerProfile.getSkills().stream()
 				.map(jsSkill -> new SkillResponseDto(jsSkill.getSkill().getName(), jsSkill.getProficiencyLevel()))
@@ -143,15 +144,9 @@ public class JobSeekerService {
 	@Transactional
 	public void addSkill(String skillName, UserDetails userDetails) {
 
-		JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername());
-		if (jobSeeker == null)
-			throw new ResourceNotFoundException("JobSeeker profile not found");
+		JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername())
+				.orElseThrow(() -> new ResourceNotFoundException("JobSeeker profile not found"));
 
-		// FIX 6: Before: skillRepository.findByName() returns null (not Optional).
-		// Then null was passed to existsByJobSeekerAndSkill() -> NullPointerException
-		// crash.
-		//
-		// Fix: use Optional pattern. If skill not found in master list, return 404.
 		Skill skill = Optional.ofNullable(skillRepository.findByName(skillName))
 				.orElseThrow(() -> new ResourceNotFoundException("Skill not found: " + skillName));
 
@@ -173,14 +168,15 @@ public class JobSeekerService {
 
 		String email = userDetails.getUsername();
 
-		JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(email);
+		JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(email)
+				.orElseThrow(() -> new ResourceNotFoundException("JobSeeker profile not found"));
 
 		Skill skill = skillRepository.findById(skillId)
-				.orElseThrow(() -> new RuntimeException("Skill not found"));
+				.orElseThrow(() -> new ResourceNotFoundException("Skill not found"));
 
 		JobSeekerSkill jobSeekerSkill = jobSeekerSkillRepository
 				.findByJobSeekerAndSkill(jobSeeker, skill)
-				.orElseThrow(() -> new RuntimeException("Skill not assigned"));
+				.orElseThrow(() -> new ResourceNotFoundException("Skill not assigned"));
 
 		jobSeekerSkillRepository.delete(jobSeekerSkill);
 	}
@@ -213,10 +209,8 @@ public class JobSeekerService {
 
 			String resumeUrl = "/uploads/resumes/" + cleanFileName;
 
-			JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername());
-			if (jobSeeker == null) {
-				throw new ResourceNotFoundException("JobSeeker profile not found");
-			}
+			JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername())
+					.orElseThrow(() -> new ResourceNotFoundException("JobSeeker profile not found"));
 
 			jobSeeker.setResumeUrl(resumeUrl);
 			jobseekerRepository.save(jobSeeker);

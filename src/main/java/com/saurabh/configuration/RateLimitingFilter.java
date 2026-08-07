@@ -4,7 +4,11 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
+import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,27 +22,40 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class RateLimitingFilter extends OncePerRequestFilter {
 
-    private final Map<String, Bucket> cache = new ConcurrentHashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(RateLimitingFilter.class);
+    private static final int MAX_REQUESTS_PER_MINUTE = 5;
+    private static final String RATE_LIMIT_PREFIX = "rate_limit:auth:";
+
+    public static Logger getLogger() {
+        return logger;
+    }
+
+    private final StringRedisTemplate redisTemplate;
+    private final Map<String, Bucket> fallbackCache = new ConcurrentHashMap<>();
+
+    public RateLimitingFilter(@NonNull StringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     private Bucket createNewBucket() {
         Bandwidth limit = Bandwidth.builder()
-                .capacity(5)
-                .refillIntervally(5, Duration.ofMinutes(1))
+                .capacity(MAX_REQUESTS_PER_MINUTE)
+                .refillIntervally(MAX_REQUESTS_PER_MINUTE, Duration.ofMinutes(1))
                 .build();
         return Bucket.builder().addLimit(limit).build();
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(@SuppressWarnings("null") HttpServletRequest request, @SuppressWarnings("null") HttpServletResponse response,
+            @SuppressWarnings("null") FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
 
         if (path.startsWith("/api/v1/auth/")) {
             String clientIp = getClientIP(request);
-            Bucket bucket = cache.computeIfAbsent(clientIp, k -> createNewBucket());
+            boolean allowed = checkRateLimit(clientIp);
 
-            if (!bucket.tryConsume(1)) {
+            if (!allowed) {
                 response.setStatus(429);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"message\": \"Too many requests. Please wait 1 minute before trying again.\", \"authStatus\": \"TOO_MANY_REQUESTS\"}");
@@ -49,6 +66,25 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    private boolean checkRateLimit(String clientIp) {
+        try {
+            if (redisTemplate != null) {
+                String key = RATE_LIMIT_PREFIX + clientIp;
+                Long count = redisTemplate.opsForValue().increment(key);
+                if (count != null && count == 1) {
+                    redisTemplate.expire(key, 1, TimeUnit.MINUTES);
+                }
+                return count != null && count <= MAX_REQUESTS_PER_MINUTE;
+            }
+        } catch (Exception e) {
+            logger.warn("Redis unavailable for rate limiting, falling back to local bucket: {}", e.getMessage());
+        }
+
+        // Fallback to local Bucket4j
+        Bucket bucket = fallbackCache.computeIfAbsent(clientIp, k -> createNewBucket());
+        return bucket.tryConsume(1);
+    }
+
     private String getClientIP(HttpServletRequest request) {
         String xfHeader = request.getHeader("X-Forwarded-For");
         if (xfHeader == null || xfHeader.isEmpty()) {
@@ -57,3 +93,4 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         return xfHeader.split(",")[0].trim();
     }
 }
+

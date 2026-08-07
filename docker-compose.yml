@@ -10,6 +10,28 @@ services:
       SPRING_DATASOURCE_URL: ${DB_URL}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
+    depends_on:
+      - redis
     restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: job-portal-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  redis-gui:
+    image: rediscommander/redis-commander:latest
+    container_name: job-portal-redis-gui
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    restart: unless-stopped

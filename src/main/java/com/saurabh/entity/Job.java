@@ -68,6 +68,9 @@ public class Job {
 
 	private LocalDate deadline;
 
+	@Builder.Default
+	private Long viewsCount = 0L;
+
 	@OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Application> applications;
 

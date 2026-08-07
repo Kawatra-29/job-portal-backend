@@ -26,7 +26,12 @@ import lombok.*;
 @Setter
 public class User implements UserDetails {
 
-    @Id
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -51,6 +56,14 @@ public class User implements UserDetails {
     @Builder.Default
     @Column(name = "is_email_verified")
     private Boolean isEmailVerified = false;
+
+    public Boolean getIsEmailVerified() {
+        return isEmailVerified;
+    }
+
+    public void setIsEmailVerified(Boolean isEmailVerified) {
+        this.isEmailVerified = isEmailVerified;
+    }
 
     @CreationTimestamp
     private LocalDateTime createdAt;

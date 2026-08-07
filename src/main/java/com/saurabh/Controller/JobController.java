@@ -37,9 +37,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 @RequestMapping("/api/v1")
 public class JobController {
 
-	// @Autowired // to inject jobservice bean into this class(DI)
-	// private JobService jobService;
-
 	@Autowired
 	private JobRepository jobRepository;
 
@@ -50,14 +47,10 @@ public class JobController {
 	private JobMapper jobMapper;
 
 	@GetMapping("/jobs")
-	public Page<JobResponseDto> getJobs(
-			@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "10") int size,
-			@RequestParam(required = false) String title,
-			@RequestParam(required = false) String location,
-			@RequestParam(required = false) JobType jobType,
-			@RequestParam(required = false) WorkMode workMode,
-			@RequestParam(required = false) JobStatus status) {
+	public Page<JobResponseDto> getJobs(@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String title,
+			@RequestParam(required = false) String location, @RequestParam(required = false) JobType jobType,
+			@RequestParam(required = false) WorkMode workMode, @RequestParam(required = false) JobStatus status) {
 		Pageable pageable = PageRequest.of(page, size);
 		Specification<Job> spec = JobSpecification.filter(title, location, jobType, workMode, status);
 		Page<Job> job = jobRepository.findAll(spec, pageable);
@@ -67,8 +60,7 @@ public class JobController {
 	@GetMapping("/jobs/{id}")
 	public JobResponseDto getJobsById(@PathVariable long id) {
 
-		Job job = jobService.getJob(id);
-		return jobMapper.toDTO(job);
+		return jobService.getJob(id);
 	}
 
 	@PostMapping("/jobs")
@@ -105,8 +97,7 @@ public class JobController {
 	@PatchMapping("/jobs/{id}/status")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<?> updateJobStatus(@PathVariable @NonNull Long id,
-			@RequestParam JobStatus status,
+	public ResponseEntity<?> updateJobStatus(@PathVariable @NonNull Long id, @RequestParam JobStatus status,
 			@AuthenticationPrincipal UserDetails userDetails) {
 		jobService.updateStatus(id, status, userDetails);
 		return ResponseEntity.ok("Job status updated");
