@@ -5,24 +5,25 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "password_reset_tokens")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "password_reset_tokens", indexes = { @Index(name = "idx_pwd_token", columnList = "token"),
+		@Index(name = "idx_pwd_email", columnList = "email") })
 public class PasswordResetToken {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+	@Column(nullable = false, unique = true)
+	private String email;
 
-    @Column(nullable = false)
-    private String otp;
+	@Column(nullable = false)
+	private String otp;
 
-    @Column(nullable = false)
-    private LocalDateTime expiryTime;
+	@Column(nullable = false)
+	private LocalDateTime expiryTime;
 }

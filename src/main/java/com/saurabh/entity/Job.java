@@ -22,7 +22,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "jobs")
+@Table(name = "jobs", indexes = { @Index(name = "idx_job_search", columnList = "location, title, status"),
+		@Index(name = "idx_job_employer", columnList = "employer_id") })
 public class Job {
 
 	@Id

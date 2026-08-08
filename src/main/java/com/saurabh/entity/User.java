@@ -16,9 +16,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "users", indexes = {
-        @Index(name = "idx_email", columnList = "email")
-})
+@Table(name = "users", indexes = { @Index(name = "idx_users_email", columnList = "email", unique = true) })
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -26,64 +25,64 @@ import lombok.*;
 @Setter
 public class User implements UserDetails {
 
-    /**
+	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
 	@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String email;
+	@Column(unique = true, nullable = false)
+	private String email;
 
-    private String passwordHash;
+	private String passwordHash;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+	@Enumerated(EnumType.STRING)
+	private Role role;
 
-    private String fullName;
+	private String fullName;
 
-    private String phone;
+	private String phone;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private JobSeeker jobSeeker;
+	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	private JobSeeker jobSeeker;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Employer employer;
+	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Employer employer;
 
-    @Builder.Default
-    @Column(name = "is_email_verified")
-    private Boolean isEmailVerified = false;
+	@Builder.Default
+	@Column(name = "is_email_verified")
+	private Boolean isEmailVerified = false;
 
-    public Boolean getIsEmailVerified() {
-        return isEmailVerified;
-    }
+	public Boolean getIsEmailVerified() {
+		return isEmailVerified;
+	}
 
-    public void setIsEmailVerified(Boolean isEmailVerified) {
-        this.isEmailVerified = isEmailVerified;
-    }
+	public void setIsEmailVerified(Boolean isEmailVerified) {
+		this.isEmailVerified = isEmailVerified;
+	}
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
+	@CreationTimestamp
+	private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+	@UpdateTimestamp
+	private LocalDateTime updatedAt;
 
-    @Override
-    public String getUsername() {
-        return email;
-    }
+	@Override
+	public String getUsername() {
+		return email;
+	}
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
-    }
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+	}
 
-    @Override
-    public @Nullable String getPassword() {
-        return passwordHash;
-    }
+	@Override
+	public @Nullable String getPassword() {
+		return passwordHash;
+	}
 
 }

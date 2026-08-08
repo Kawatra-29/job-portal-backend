@@ -21,4 +21,5 @@ public record JobResponseDto(
         String companyName,
         Boolean isVerified,
         Long viewsCount
-) {}
+) {
+};
