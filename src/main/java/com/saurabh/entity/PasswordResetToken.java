@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "password_reset_tokens", indexes = { @Index(name = "idx_pwd_token", columnList = "token"),
+@Table(name = "password_reset_tokens", indexes = { @Index(name = "idx_pwd_otp", columnList = "otp"),
 		@Index(name = "idx_pwd_email", columnList = "email") })
 public class PasswordResetToken {
 
