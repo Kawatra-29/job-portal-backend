@@ -9,6 +9,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import com.saurabh.ENUMS.JobType;
+import com.saurabh.ENUMS.WorkMode;
+import com.saurabh.Specification.JobSpecification;
 import com.saurabh.DTOs.JobRequestDto;
 import com.saurabh.DTOs.JobResponseDto;
 import com.saurabh.ENUMS.JobStatus;
@@ -158,6 +167,19 @@ public class JobService {
 		}
 		job.setStatus(status);
 		jobRepository.save(job);
+	}
+
+	@Cacheable(value = "jobs_list", key = "{#page, #size, #title, #location, #jobType, #workMode, #status}")
+	@Transactional(readOnly = true)
+	public List<JobResponseDto> getAllJobs(int page, int size, String title, String location,
+			JobType jobType, WorkMode workMode, JobStatus status) {
+		Pageable pageable = PageRequest.of(page, size);
+		Specification<Job> spec = JobSpecification.filter(title, location, jobType, workMode, status);
+		Page<Job> jobs = jobRepository.findAll(spec, pageable);
+
+		return jobs.getContent().stream()
+				.map(jobMapper::toDTO)
+				.collect(Collectors.toList());
 	}
 
 }

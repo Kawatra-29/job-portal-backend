@@ -33,6 +33,8 @@ import com.saurabh.service.JobService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1")
 public class JobController {
@@ -47,14 +49,12 @@ public class JobController {
 	private JobMapper jobMapper;
 
 	@GetMapping("/jobs")
-	public Page<JobResponseDto> getJobs(@RequestParam(defaultValue = "0") int page,
+	public ResponseEntity<List<JobResponseDto>> getJobs(@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String title,
 			@RequestParam(required = false) String location, @RequestParam(required = false) JobType jobType,
 			@RequestParam(required = false) WorkMode workMode, @RequestParam(required = false) JobStatus status) {
-		Pageable pageable = PageRequest.of(page, size);
-		Specification<Job> spec = JobSpecification.filter(title, location, jobType, workMode, status);
-		Page<Job> job = jobRepository.findAll(spec, pageable);
-		return jobMapper.__toDTO__(job);
+		List<JobResponseDto> jobs = jobService.getAllJobs(page, size, title, location, jobType, workMode, status);
+		return ResponseEntity.ok(jobs);
 	}
 
 	@GetMapping("/jobs/{id}")
