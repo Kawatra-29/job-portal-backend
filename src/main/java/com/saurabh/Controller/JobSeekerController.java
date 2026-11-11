@@ -24,8 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.saurabh.DTOs.JobSeekerDto;
 import com.saurabh.DTOs.JobSeekerResponseDTO;
 import com.saurabh.DTOs.SkillResponseDto;
-import com.saurabh.Entity.JobSeeker;
 import com.saurabh.service.JobSeekerService;
+
+import jakarta.validation.Valid;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
@@ -47,12 +48,12 @@ public class JobSeekerController {
 	@PutMapping("/me")
 	@SecurityRequirement(name = "bearerAuth")
 	@PreAuthorize("hasRole('JOBSEEKER')")
-	public ResponseEntity<JobSeeker> updateUser(@RequestBody JobSeekerDto jobSeekerDto,
+	public ResponseEntity<JobSeekerResponseDTO> updateUser(@RequestBody @Valid JobSeekerDto jobSeekerDto,
 			@AuthenticationPrincipal UserDetails userDetails) {
 
-		JobSeeker updatedJobSeeker = jobSeekerService.update(jobSeekerDto, userDetails);
+		JobSeekerResponseDTO updatedProfile = jobSeekerService.update(jobSeekerDto, userDetails);
 
-		return ResponseEntity.ok(updatedJobSeeker);
+		return ResponseEntity.ok(updatedProfile);
 	}
 
 	@PostMapping(value = "/me/resume", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

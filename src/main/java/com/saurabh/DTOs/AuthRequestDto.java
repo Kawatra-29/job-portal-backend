@@ -1,7 +1,25 @@
 package com.saurabh.DTOs;
 
 import com.saurabh.ENUMS.Role;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
-public record AuthRequestDto(String fname, String email, String password,Role role,String phone) {
-}
-// record used to only hold data (and reduce boilerplate code like constructors,getters etc..)
+public record AuthRequestDto(
+		@NotBlank(message = "Full name is required")
+		String fname,
+
+		@NotBlank(message = "Email is required")
+		@Email(message = "Invalid email format")
+		String email,
+
+		@NotBlank(message = "Password is required")
+		@Size(min = 6, message = "Password must be at least 6 characters")
+		String password,
+
+		@NotNull(message = "Role is required")
+		Role role,
+
+		String phone
+) {}

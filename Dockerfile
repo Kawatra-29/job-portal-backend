@@ -2,14 +2,13 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
-# Download maven dependencies to cache them
-RUN mvn dependency:go-offline -B
 COPY src ./src
-RUN mvn package -DskipTests
+RUN mvn clean package -DskipTests
 
 # Run stage
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
+RUN mkdir -p /app/uploads/resumes /app/logs
 COPY --from=build /app/target/*.jar app.jar
-EXPOSE 7860
-ENTRYPOINT ["java", "-jar", "app.jar", "--server.port=7860"]
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]

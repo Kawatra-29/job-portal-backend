@@ -31,7 +31,7 @@ public class EmailService {
 
     @Async
     public void sendOtpEmail(String toEmail, String otp) {
-        logger.info("--> [OTP GENERATED] Email: {}, OTP: {}", toEmail, otp);
+        logger.info("--> [OTP GENERATED] Email: {}, OTP: [PROTECTED]", toEmail);
         String subject = "Stride Job Portal - Verify Your Email OTP";
         String body = "Welcome to Stride Job Portal!\n\nYour 6-digit OTP for email verification is: " 
                 + otp + "\n\nThis OTP is valid for 5 minutes. Do not share it with anyone.";
@@ -41,7 +41,7 @@ public class EmailService {
 
     @Async
     public void sendPasswordResetEmail(String toEmail, String otp) {
-        logger.info("--> [RESET OTP GENERATED] Email: {}, OTP: {}", toEmail, otp);
+        logger.info("--> [RESET OTP GENERATED] Email: {}, OTP: [PROTECTED]", toEmail);
         String subject = "Stride Job Portal - Reset Your Password";
         String body = "Hello,\n\nWe received a request to reset your Stride account password.\n\nYour 6-digit Password Reset OTP is: " 
                 + otp + "\n\nThis OTP is valid for 15 minutes. If you did not request a password reset, please ignore this email.";
@@ -65,7 +65,7 @@ public class EmailService {
 
     public void sendDirectEmail(EmailTaskDto task) {
         if (mailSender == null) {
-            logger.warn("JavaMailSender is not configured. Email task for {} payload: {}", task.toEmail(), task.body());
+            logger.warn("JavaMailSender is not configured. Email task [{}] for {} skipped direct send.", task.type(), task.toEmail());
             return;
         }
 
@@ -80,7 +80,7 @@ public class EmailService {
             logger.info("Successfully sent email [{}] to {}", task.type(), task.toEmail());
         } catch (Exception e) {
             logger.error("Failed to send email [{}] to {}: {}", task.type(), task.toEmail(), e.getMessage());
-            logger.info("FALLBACK EMAIL PAYLOAD for {}: {}", task.toEmail(), task.body());
+            logger.warn("Email delivery failed for [{}] to {}", task.type(), task.toEmail());
         }
     }
 }

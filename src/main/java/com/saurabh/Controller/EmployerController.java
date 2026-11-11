@@ -19,7 +19,7 @@ import com.saurabh.DTOs.ApplicationResponseDto;
 import com.saurabh.DTOs.EmployerRequestDto;
 import com.saurabh.DTOs.EmployerSummaryDto;
 import com.saurabh.DTOs.JobResponseDto;
-import com.saurabh.Entity.Employer;
+import jakarta.validation.Valid;
 import com.saurabh.service.EmployerService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -41,11 +41,11 @@ public class EmployerController {
 	@PutMapping("/me")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<?> update(@RequestBody EmployerRequestDto employerRequestDto,
+	public ResponseEntity<EmployerSummaryDto> update(@RequestBody @Valid EmployerRequestDto employerRequestDto,
 			@AuthenticationPrincipal UserDetails userDetails) {
-		Employer employer = employerService.update(employerRequestDto, userDetails);
+		EmployerSummaryDto updatedEmployer = employerService.update(employerRequestDto, userDetails);
 
-		return ResponseEntity.ok(employer);
+		return ResponseEntity.ok(updatedEmployer);
 
 	}
 

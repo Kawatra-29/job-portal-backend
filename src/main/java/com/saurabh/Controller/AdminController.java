@@ -12,14 +12,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.saurabh.Entity.User;
+import com.saurabh.DTOs.UserResponseDTO;
 import com.saurabh.service.EmployerService;
 import com.saurabh.service.UserService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
-@RequestMapping("/api/v1/admin") // Fixed: was "/admin", didn't match SecurityFilterChain rule for "/api/v1/admin/**"
+@RequestMapping("/api/v1/admin")
 public class AdminController {
 
     @Autowired
@@ -31,7 +31,7 @@ public class AdminController {
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
-    public Page<User> getAllUsers(
+    public Page<UserResponseDTO> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return userService.getAllUsers(page, size);

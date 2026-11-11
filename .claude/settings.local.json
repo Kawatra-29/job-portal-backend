@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn compile *)",
+      "Bash(Select-Object -First 30)",
+      "Bash(powershell.exe -Command \"cd 'd:\\\\SPRING_WORKSPACE\\\\job-portal-backend'; mvn compile -q 2>&1 | Select-Object -First 40\")",
+      "Bash(powershell.exe -Command \"Get-Content 'd:\\\\SPRING_WORKSPACE\\\\job-portal-backend\\\\src\\\\main\\\\java\\\\com\\\\saurabh\\\\Entity\\\\Job.java'\")",
+      "Bash(psql \"postgresql://neondb_owner:npg_BADzecuviX63@ep-bold-hall-a1h31clk-pooler.ap-southeast-1.aws.neon.tech/neondb\" -c \"\\\\d skills\")",
+      "Bash(curl -s http://localhost:8080/api/v1/skills)",
+      "Bash(mvn clean *)"
+    ]
+  }
+}

@@ -30,7 +30,7 @@ public class Application {
 	private Long id;
 
 	@ManyToOne
-	@JoinColumn(name = "JobSeeker_id")
+	@JoinColumn(name = "job_seeker_id")
 	private JobSeeker jobSeeker;
 
 	@ManyToOne

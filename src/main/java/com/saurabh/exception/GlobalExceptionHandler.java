@@ -1,10 +1,13 @@
 package com.saurabh.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -12,18 +15,7 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // FIX 8: Before, only EmailAlreadyExistsException was handled here.
-    // Every other RuntimeException ("Job not found", "Unauthorized", etc.)
-    // returned HTTP 500 — which means your frontend saw a server crash for
-    // what are actually normal 404/403 situations.
-    //
-    // Now we handle each case with the correct HTTP status:
-    //   ResourceNotFoundException  -> 404 Not Found
-    //   EmailAlreadyExistsException -> 400 Bad Request
-    //   IllegalStateException       -> 409 Conflict  (e.g. "already applied")
-    //   AccessDeniedException       -> 403 Forbidden
-    //   BadCredentialsException     -> 401 Unauthorized
-    //   RuntimeException (fallback) -> 500 (only for truly unexpected errors)
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex) {
@@ -59,9 +51,35 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    // Catch-all for anything unexpected — still 500, but at least it's structured JSON
+    // Spring Web ResponseStatusException (e.g. 404, 400 thrown from controllers/services)
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null) status = HttpStatus.BAD_REQUEST;
+        return buildResponse(status, ex.getReason());
+    }
+
+    // Bean validation failures (@Valid)
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(org.springframework.web.bind.MethodArgumentNotValidException ex) {
+        java.util.Map<String, String> fieldErrors = new java.util.HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+            fieldErrors.put(error.getField(), error.getDefaultMessage())
+        );
+        return new ResponseEntity<>(
+                java.util.Map.of(
+                        "timestamp", LocalDateTime.now().toString(),
+                        "status", HttpStatus.BAD_REQUEST.value(),
+                        "error", "Bad Request",
+                        "message", "Validation failed",
+                        "errors", fieldErrors),
+                HttpStatus.BAD_REQUEST);
+    }
+
+    // Catch-all for anything unexpected
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(RuntimeException ex) {
+        logger.error("Unhandled runtime exception occurred: ", ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
     }
 

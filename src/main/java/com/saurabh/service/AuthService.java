@@ -33,7 +33,7 @@ import com.saurabh.repository.OtpRepository;
 import com.saurabh.repository.PasswordResetRepository;
 import com.saurabh.repository.UserRepository;
 import com.saurabh.util.JwtUtils;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Set;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.saurabh.ENUMS.Availability;
 
@@ -29,6 +30,7 @@ public class JobSeeker {
     @OneToOne
     @MapsId
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     private String headline;
@@ -49,7 +51,7 @@ public class JobSeeker {
     private Availability availability;
 
     @OneToMany(mappedBy = "jobSeeker", cascade = CascadeType.ALL, orphanRemoval = true)
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @JsonIgnore
     private List<Application> applications;
 
     private String resumeUrl;

@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.saurabh.DTOs.PasswordRequestDto;
 import com.saurabh.DTOs.UserResponseDTO;
+import com.saurabh.DTOs.UserUpdateRequestDto;
 import com.saurabh.Entity.User;
 import com.saurabh.exception.ResourceNotFoundException;
 import com.saurabh.repository.UserRepository;
@@ -20,7 +21,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
-    UserService(PasswordEncoder passwordEncoder, UserRepository userRepository) {
+    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -35,17 +36,23 @@ public class UserService {
                 user.getFullName(),
                 user.getEmail(),
                 user.getPhone(),
-                user.getRole().name());
+                user.getRole() != null ? user.getRole().name() : null);
     }
 
     @Transactional
-    public User updateUser(User user, UserDetails userDetails) {
+    public UserResponseDTO updateUser(UserUpdateRequestDto request, UserDetails userDetails) {
         String email = userDetails.getUsername();
         User user1 = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        user1.setPhone(user.getPhone());
-        user1.setFullName(user.getFullName());
-        return userRepository.save(user1);
+        if (request.phone() != null) user1.setPhone(request.phone());
+        if (request.fullName() != null) user1.setFullName(request.fullName());
+        User saved = userRepository.save(user1);
+        return new UserResponseDTO(
+                saved.getId(),
+                saved.getFullName(),
+                saved.getEmail(),
+                saved.getPhone(),
+                saved.getRole() != null ? saved.getRole().name() : null);
     }
 
     @Transactional
@@ -69,8 +76,14 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public Page<User> getAllUsers(int page, int size) {
+    public Page<UserResponseDTO> getAllUsers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return userRepository.findAll(pageable);
+        return userRepository.findAll(pageable)
+                .map(u -> new UserResponseDTO(
+                        u.getId(),
+                        u.getFullName(),
+                        u.getEmail(),
+                        u.getPhone(),
+                        u.getRole() != null ? u.getRole().name() : null));
     }
 }

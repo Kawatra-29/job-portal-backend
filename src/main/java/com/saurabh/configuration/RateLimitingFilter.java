@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -23,8 +24,10 @@ import jakarta.servlet.http.HttpServletResponse;
 public class RateLimitingFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(RateLimitingFilter.class);
-    private static final int MAX_REQUESTS_PER_MINUTE = 5;
     private static final String RATE_LIMIT_PREFIX = "rate_limit:auth:";
+
+    @Value("${rate.limit.auth.per.minute:30}")
+    private int maxRequestsPerMinute;
 
     public static Logger getLogger() {
         return logger;
@@ -39,8 +42,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private Bucket createNewBucket() {
         Bandwidth limit = Bandwidth.builder()
-                .capacity(MAX_REQUESTS_PER_MINUTE)
-                .refillIntervally(MAX_REQUESTS_PER_MINUTE, Duration.ofMinutes(1))
+                .capacity(maxRequestsPerMinute)
+                .refillIntervally(maxRequestsPerMinute, Duration.ofMinutes(1))
                 .build();
         return Bucket.builder().addLimit(limit).build();
     }
@@ -73,11 +76,21 @@ public class RateLimitingFilter extends OncePerRequestFilter {
                 Long count = redisTemplate.opsForValue().increment(key);
                 if (count != null && count == 1) {
                     redisTemplate.expire(key, 1, TimeUnit.MINUTES);
+                } else if (count != null && count > 1) {
+                    Long ttl = redisTemplate.getExpire(key);
+                    if (ttl != null && ttl < 0) {
+                        redisTemplate.expire(key, 1, TimeUnit.MINUTES);
+                    }
                 }
-                return count != null && count <= MAX_REQUESTS_PER_MINUTE;
+                return count != null && count <= maxRequestsPerMinute;
             }
         } catch (Exception e) {
             logger.warn("Redis unavailable for rate limiting, falling back to local bucket: {}", e.getMessage());
+        }
+
+        // Bound memory footprint on fallback
+        if (fallbackCache.size() > 5000) {
+            fallbackCache.clear();
         }
 
         // Fallback to local Bucket4j
@@ -93,4 +106,3 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         return xfHeader.split(",")[0].trim();
     }
 }
-

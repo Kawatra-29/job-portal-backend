@@ -1,5 +1,6 @@
 package com.saurabh.util;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -23,11 +24,13 @@ import io.jsonwebtoken.security.SignatureException;
 @Component
 public class JwtUtils {
 
-    @Value("${jwt.secret}")
-    private String secretKeyString;  // inject as String first
+    @Value("${jwt.secret:defaultSecretKeyWithAtLeast32BytesLengthForSecurity!}")
+    private String secretKeyString;
 
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
+    @Value("${jwt.expiration:86400000}")
+    private String jwtExpirationString;
+
+    private long jwtExpiration = 86400000L;
 
     private SecretKey secretKey;
     
@@ -42,21 +45,33 @@ public class JwtUtils {
 
     @PostConstruct
     public void init() {
-        //byte[] keyBytes = Decoders.BASE64.decode(secretKeyString);
-        this.secretKey =  Keys.hmacShaKeyFor(secretKeyString.getBytes());
+        if (jwtExpirationString != null && !jwtExpirationString.trim().isEmpty()) {
+            try {
+                this.jwtExpiration = Long.parseLong(jwtExpirationString.trim());
+            } catch (NumberFormatException e) {
+                logger.warn("Invalid jwt.expiration value '{}', falling back to default 86400000 ms", jwtExpirationString);
+                this.jwtExpiration = 86400000L;
+            }
+        }
+
+        String secret = (secretKeyString != null && !secretKeyString.trim().isEmpty())
+                ? secretKeyString.trim()
+                : "defaultSecretKeyWithAtLeast32BytesLengthForSecurity!";
+
+        // Ensure at least 32 bytes (256-bit)
+        if (secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            secret = String.format("%-32s", secret).replace(' ', '0');
+        }
+
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     private static final String ISSUER = "SAURABH KAWATRA";
 
-    // FIX 1: validateToken should NEVER throw — return false on any bad token.
-    // Before: catch(JwtException e) { throw new RuntimeException(...) }
-    // That caused a 500 on every expired/invalid token instead of 401.
     public boolean validateToken(String jwtToken) {
         return parseToken(jwtToken) != null;
     }
  
-    // FIX 1 (continued): Each exception type is logged separately so you can
-    // distinguish expired tokens from tampered ones in your logs.
     private Claims parseToken(String jwtToken) {
         try {
             return Jwts.parser()
@@ -64,7 +79,7 @@ public class JwtUtils {
                     .build()
                     .parseSignedClaims(jwtToken)
                     .getPayload();
- 
+
         } catch (ExpiredJwtException e) {
             logger.warn("JWT token expired: {}", e.getMessage());
         } catch (SignatureException e) {
@@ -115,7 +130,7 @@ public class JwtUtils {
         return false;
     }
 
-    public String generateToken(User user) {  // no longer static
+    public String generateToken(User user) {
         Instant now = Instant.now();
         return Jwts.builder()   
                 .id(UUID.randomUUID().toString())

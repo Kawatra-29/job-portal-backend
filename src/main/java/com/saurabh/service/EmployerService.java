@@ -116,7 +116,7 @@ public class EmployerService {
 	}
 
 	@Transactional
-	public Employer update(EmployerRequestDto request, UserDetails userDetails) {
+	public EmployerSummaryDto update(EmployerRequestDto request, UserDetails userDetails) {
 		Employer employer = employerRepository.findByUser_Email(userDetails.getUsername())
 				.orElseThrow(() -> new ResourceNotFoundException("Employer not found"));
 
@@ -124,7 +124,9 @@ public class EmployerService {
 		employer.setDescription(request.description());
 		employer.setCompanySize(request.companySize());
 
-		return employerRepository.save(employer);
+		Employer saved = employerRepository.save(employer);
+		return new EmployerSummaryDto(saved.getId(), saved.getCompanyName(), saved.getCompanySize(),
+				saved.getDescription(), saved.getIsVerified());
 	}
 
 	@SuppressWarnings("null")

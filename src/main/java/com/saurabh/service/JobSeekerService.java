@@ -11,11 +11,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.UUID;
 
 import com.saurabh.DTOs.JobSeekerDto;
 import com.saurabh.DTOs.JobSeekerResponseDTO;
@@ -44,6 +47,11 @@ public class JobSeekerService {
 
 	@Autowired
 	private JobSeekerSkillRepository jobSeekerSkillRepository;
+
+	@Value("${app.upload.dir:uploads/resumes}")
+	private String uploadDir;
+
+	private static final long MAX_RESUME_SIZE = 5 * 1024 * 1024; // 5 MB
 
 	@Transactional(readOnly = true)
 	public ResponseEntity<JobSeekerResponseDTO> getProfile(UserDetails userDetails) {
@@ -84,7 +92,7 @@ public class JobSeekerService {
 	}
 
 	@Transactional
-	public JobSeeker update(JobSeekerDto jobSeekerDto, UserDetails userDetails) {
+	public JobSeekerResponseDTO update(JobSeekerDto jobSeekerDto, UserDetails userDetails) {
 
 		User user = userRepository.findByEmail(userDetails.getUsername())
 				.orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -123,7 +131,33 @@ public class JobSeekerService {
 		}
 
 		jobseekerRepository.save(jobSeekerProfile2);
-		return jobSeekerProfile2;
+
+		// Issue 9 Fix: Entity ki jagah DTO return karo — entity expose nahi honi chahiye.
+		// getProfile() wala same DTO mapping reuse kar rahe hain.
+		Set<SkillResponseDto> skillDtos = Optional.ofNullable(jobSeekerProfile2.getSkills())
+				.orElse(Collections.emptySet())
+				.stream()
+				.map(jsSkill -> new SkillResponseDto(jsSkill.getSkill().getName(), jsSkill.getProficiencyLevel()))
+				.collect(Collectors.toSet());
+
+		UserResponseDTO userDto = new UserResponseDTO(
+				user.getId(),
+				user.getFullName(),
+				user.getEmail(),
+				user.getPhone(),
+				user.getRole().name());
+
+		return new JobSeekerResponseDTO(
+				jobSeekerProfile2.getId(),
+				jobSeekerProfile2.getHeadline(),
+				jobSeekerProfile2.getSummary(),
+				jobSeekerProfile2.getLocation(),
+				jobSeekerProfile2.getYearsOfExperience(),
+				jobSeekerProfile2.getExpectedSalary(),
+				jobSeekerProfile2.getAvailability() != null ? jobSeekerProfile2.getAvailability().name() : null,
+				jobSeekerProfile2.getResumeUrl(),
+				skillDtos,
+				userDto);
 	}
 
 	@Transactional(readOnly = true)
@@ -187,6 +221,10 @@ public class JobSeekerService {
 			throw new IllegalArgumentException("File cannot be empty");
 		}
 
+		if (file.getSize() > MAX_RESUME_SIZE) {
+			throw new IllegalArgumentException("File size exceeds maximum allowed limit (5MB)");
+		}
+
 		String originalFilename = file.getOriginalFilename();
 		String fileExtension = "";
 		if (originalFilename != null && originalFilename.contains(".")) {
@@ -197,17 +235,29 @@ public class JobSeekerService {
 			throw new IllegalArgumentException("Only PDF, DOC, and DOCX files are allowed");
 		}
 
+		// Sanitize filename to prevent directory traversal
+		String cleanedName = originalFilename != null ? StringUtils.cleanPath(originalFilename) : "resume" + fileExtension;
+		if (cleanedName.contains("..") || cleanedName.contains("/") || cleanedName.contains("\\")) {
+			throw new IllegalArgumentException("Invalid filename containing path traversal characters");
+		}
+
 		try {
-			Path uploadPath = Paths.get("uploads/resumes");
+			Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
 			if (!Files.exists(uploadPath)) {
 				Files.createDirectories(uploadPath);
 			}
 
-			String cleanFileName = System.currentTimeMillis() + "_" + (originalFilename != null ? originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_") : "resume.pdf");
-			Path filePath = uploadPath.resolve(cleanFileName);
-			Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+			String uniqueFileName = System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8) + fileExtension;
+			Path targetLocation = uploadPath.resolve(uniqueFileName).normalize();
 
-			String resumeUrl = "/uploads/resumes/" + cleanFileName;
+			// Security check: ensure target path is within upload directory
+			if (!targetLocation.startsWith(uploadPath)) {
+				throw new SecurityException("Path traversal attempt detected");
+			}
+
+			Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+			String resumeUrl = "/uploads/resumes/" + uniqueFileName;
 
 			JobSeeker jobSeeker = jobseekerRepository.findByUser_Email(userDetails.getUsername())
 					.orElseThrow(() -> new ResourceNotFoundException("JobSeeker profile not found"));

@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "myapp",
+            "request": "launch",
+            "mainClass": "com.saurabh.myapp",
+            "projectName": ""
+        },
+        {
+            "type": "java",
             "name": "Spring Boot App",
             "request": "launch",
             "cwd": "${workspaceFolder}",

@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.saurabh.ENUMS.ApplicationStatus;
+import com.saurabh.ENUMS.JobStatus;
 import com.saurabh.Entity.Application;
 import com.saurabh.Entity.Employer;
 import com.saurabh.Entity.Job;
@@ -68,9 +69,15 @@ public class ApplicationService {
 				Long count = redisTemplate.opsForValue().increment(key);
 				if (count != null && count == 1) {
 					redisTemplate.expire(key, 1, java.util.concurrent.TimeUnit.HOURS);
+				} else if (count != null && count > 1) {
+					Long ttl = redisTemplate.getExpire(key);
+					if (ttl != null && ttl < 0) {
+						redisTemplate.expire(key, 1, java.util.concurrent.TimeUnit.HOURS);
+					}
 				}
 				if (count != null && count > MAX_APPLICATIONS_PER_HOUR) {
-					throw new IllegalStateException("Job application limit exceeded (Max " + MAX_APPLICATIONS_PER_HOUR + " applications per hour)");
+					throw new IllegalStateException("Job application limit exceeded (Max " + MAX_APPLICATIONS_PER_HOUR
+							+ " applications per hour)");
 				}
 			} catch (IllegalStateException e) {
 				throw e;
@@ -81,6 +88,13 @@ public class ApplicationService {
 
 		if (applicationRepository.existsByJobAndJobSeeker(job, jobSeeker)) {
 			throw new IllegalStateException("You have already applied for this job");
+		}
+
+		// Job OPEN honi chahiye — CLOSED, PAUSED, ya FILLED job pe apply nahi ho sakti
+		if (job.getStatus() == null || job.getStatus() != JobStatus.OPEN) {
+			String statusDesc = job.getStatus() != null ? job.getStatus().name().toLowerCase() : "unavailable";
+			throw new IllegalStateException(
+					"Cannot apply: this job is currently " + statusDesc + ".");
 		}
 		Application application = Application.builder()
 				.job(job)

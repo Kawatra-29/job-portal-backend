@@ -2,6 +2,7 @@ package com.saurabh.Controller;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,6 +31,7 @@ import com.saurabh.Specification.JobSpecification;
 import com.saurabh.mapper.JobMapper;
 import com.saurabh.repository.JobRepository;
 import com.saurabh.service.JobService;
+import jakarta.validation.Valid;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
@@ -66,18 +68,18 @@ public class JobController {
 	@PostMapping("/jobs")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<JobResponseDto> create(@RequestBody JobRequestDto jobRequestDto,
+	public ResponseEntity<JobResponseDto> create(@RequestBody @Valid JobRequestDto jobRequestDto,
 			@AuthenticationPrincipal UserDetails userDetails) {
 		Job job = jobService.createJob(jobRequestDto, userDetails);
 
-		return ResponseEntity.ok(jobMapper.toDTO(job));
+		return ResponseEntity.status(HttpStatus.CREATED).body(jobMapper.toDTO(job));
 
 	}
 
 	@PutMapping("/jobs/{id}")
 	@PreAuthorize("hasRole('EMPLOYER')")
 	@SecurityRequirement(name = "bearerAuth")
-	public ResponseEntity<?> updateJobById(@PathVariable @NonNull Long id, @RequestBody JobRequestDto request,
+	public ResponseEntity<?> updateJobById(@PathVariable @NonNull Long id, @RequestBody @Valid JobRequestDto request,
 			@AuthenticationPrincipal UserDetails userDetails) {
 		jobService.updatejob(id, request, userDetails);
 

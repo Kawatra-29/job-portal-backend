@@ -27,24 +27,16 @@ public class Employer {
     @OneToOne
     @MapsId
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     private String companyName;
 
-    // private String companyLogoUrl;
-
-    // private String website;
-    //
-    // private String industry;
-
     @Enumerated(EnumType.STRING)
     private CompanySize companySize;
 
-    // private Integer foundedYear;
-    //
     private String description;
-    //
-    // private String headquarters;
+
     @Builder.Default
     private Boolean isVerified = false;
 

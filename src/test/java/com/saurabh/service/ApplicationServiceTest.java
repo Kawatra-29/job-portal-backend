@@ -15,6 +15,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.saurabh.ENUMS.ApplicationStatus;
+import com.saurabh.ENUMS.JobStatus;
 import com.saurabh.Entity.Application;
 import com.saurabh.Entity.Employer;
 import com.saurabh.Entity.Job;
@@ -60,7 +61,7 @@ class ApplicationServiceTest {
 		UserDetails userDetails = mock(UserDetails.class);
 		when(userDetails.getUsername()).thenReturn("candidate@gmail.com");
 
-		Job job = Job.builder().id(jobId).title("Java Engineer").build();
+		Job job = Job.builder().id(jobId).title("Java Engineer").status(JobStatus.OPEN).build();
 		User user = new User();
 		user.setEmail("candidate@gmail.com");
 		JobSeeker jobSeeker = new JobSeeker();
@@ -87,7 +88,7 @@ class ApplicationServiceTest {
 		UserDetails userDetails = mock(UserDetails.class);
 		when(userDetails.getUsername()).thenReturn("candidate@gmail.com");
 
-		Job job = Job.builder().id(jobId).build();
+		Job job = Job.builder().id(jobId).status(JobStatus.OPEN).build();
 		User user = new User();
 		JobSeeker jobSeeker = new JobSeeker();
 		jobSeeker.setId(10L);

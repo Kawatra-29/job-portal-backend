@@ -9,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.saurabh.ENUMS.Role;
 
 import jakarta.annotation.Nullable;
@@ -25,9 +26,6 @@ import lombok.*;
 @Setter
 public class User implements UserDetails {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -37,6 +35,7 @@ public class User implements UserDetails {
 	@Column(unique = true, nullable = false)
 	private String email;
 
+	@JsonIgnore
 	private String passwordHash;
 
 	@Enumerated(EnumType.STRING)
@@ -47,9 +46,11 @@ public class User implements UserDetails {
 	private String phone;
 
 	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	@JsonIgnore
 	private JobSeeker jobSeeker;
 
 	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	@JsonIgnore
 	private Employer employer;
 
 	@Builder.Default

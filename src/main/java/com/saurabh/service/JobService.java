@@ -2,6 +2,7 @@ package com.saurabh.service;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,8 +29,6 @@ import com.saurabh.mapper.JobMapper;
 import com.saurabh.repository.EmployerRepository;
 import com.saurabh.repository.JobRepository;
 
-//spring business service
-
 @Service
 public class JobService {
 	@Autowired
@@ -43,6 +42,10 @@ public class JobService {
 
 	@Autowired(required = false)
 	private org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
+
+	@Lazy
+	@Autowired
+	private JobService self;
 
 	private static final Logger logger = LoggerFactory.getLogger(JobService.class);
 	private static final int MAX_JOBS_PER_HOUR = 10;
@@ -65,6 +68,11 @@ public class JobService {
 				Long count = redisTemplate.opsForValue().increment(key);
 				if (count != null && count == 1) {
 					redisTemplate.expire(key, 1, java.util.concurrent.TimeUnit.HOURS);
+				} else if (count != null && count > 1) {
+					Long ttl = redisTemplate.getExpire(key);
+					if (ttl != null && ttl < 0) {
+						redisTemplate.expire(key, 1, java.util.concurrent.TimeUnit.HOURS);
+					}
 				}
 				if (count != null && count > MAX_JOBS_PER_HOUR) {
 					throw new IllegalStateException("Employer job posting limit exceeded (Max " + MAX_JOBS_PER_HOUR + " jobs per hour)");
@@ -87,14 +95,16 @@ public class JobService {
 		return jobRepository.save(job);
 	}
 
-	@Cacheable(value = "jobs", key = "#id")
-	@Transactional(readOnly = true)
 	public JobResponseDto getJob(Long id) {
+		// Step 1: View count increment in Redis
+		incrementViewCount(id);
 
-		Job job = jobRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + id));
+		// Step 2: Fetch cached data via self-proxy to ensure @Cacheable activates
+		JobService target = (self != null) ? self : this;
+		return target.getJobCached(id);
+	}
 
-		// Increment Redis view counter
+	private void incrementViewCount(Long id) {
 		if (redisTemplate != null) {
 			try {
 				redisTemplate.opsForValue().increment(JOB_VIEWS_PREFIX + id);
@@ -102,7 +112,13 @@ public class JobService {
 				logger.warn("Redis view count increment failed for job {}: {}", id, e.getMessage());
 			}
 		}
+	}
 
+	@Cacheable(value = "jobs", key = "#id")
+	@Transactional(readOnly = true)
+	public JobResponseDto getJobCached(Long id) {
+		Job job = jobRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + id));
 		return jobMapper.toDTO(job);
 	}
 
