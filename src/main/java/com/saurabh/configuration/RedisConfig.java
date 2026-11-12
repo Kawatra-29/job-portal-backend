@@ -20,12 +20,9 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.lang.NonNull;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
-import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @SuppressWarnings("null")
@@ -36,30 +33,18 @@ public class RedisConfig implements CachingConfigurer {
     private static final Logger log = LoggerFactory.getLogger(RedisConfig.class);
 
     /**
-     * Shared ObjectMapper with JavaTimeModule registered so that Java 8 date/time
-     * types (LocalDate, LocalDateTime, etc.) are serialized correctly when stored
-     * in Redis cache, along with polymorphic typing so Lists and DTOs deserialize
-     * as their exact concrete classes instead of LinkedHashMap.
-     * FAIL_ON_UNKNOWN_PROPERTIES is set to false to support Java Records with polymorphic metadata.
+     * Dedicated Redis Serializer with JavaTimeModule registered so that Java 8 date/time
+     * types (LocalDate, LocalDateTime) serialize properly.
+     * Note: We construct this mapper internally so it does NOT pollute Spring Web MVC's
+     * primary ObjectMapper (which would wrap REST responses in type arrays).
      */
     @Bean
-    ObjectMapper redisObjectMapper() {
+    GenericJackson2JsonRedisSerializer genericJackson2JsonRedisSerializer() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
-                .allowIfBaseType(Object.class)
-                .build();
-        mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.EVERYTHING, JsonTypeInfo.As.PROPERTY);
-
-        return mapper;
-    }
-
-    @Bean
-    GenericJackson2JsonRedisSerializer genericJackson2JsonRedisSerializer(ObjectMapper redisObjectMapper) {
-        return new GenericJackson2JsonRedisSerializer(redisObjectMapper);
+        return new GenericJackson2JsonRedisSerializer(mapper);
     }
 
     @Bean
