@@ -1,10 +1,15 @@
 package com.saurabh.DTOs;
 
 import java.math.BigDecimal;
-
-import com.saurabh.ENUMS.*;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.saurabh.ENUMS.ExperienceLevel;
+import com.saurabh.ENUMS.JobStatus;
+import com.saurabh.ENUMS.JobType;
+import com.saurabh.ENUMS.WorkMode;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record JobResponseDto(
         Long id,
         String title,
@@ -22,4 +27,4 @@ public record JobResponseDto(
         Boolean isVerified,
         Long viewsCount
 ) {
-};
+}
