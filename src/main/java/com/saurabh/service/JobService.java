@@ -52,7 +52,7 @@ public class JobService {
 	private static final String JOB_POST_LIMIT_PREFIX = "rate_limit:job_post:";
 	private static final String JOB_VIEWS_PREFIX = "job:views:";
 
-	@CacheEvict(value = {"jobs", "jobs_list"}, allEntries = true)
+	@CacheEvict(value = "jobs", allEntries = true)
 	@Transactional
 	public Job createJob(JobRequestDto request, UserDetails userDetails) {
 
@@ -122,7 +122,7 @@ public class JobService {
 		return jobMapper.toDTO(job);
 	}
 
-	@CacheEvict(value = {"jobs", "jobs_list"}, allEntries = true)
+	@CacheEvict(value = "jobs", allEntries = true)
 	@Transactional
 	public void updatejob(@NonNull Long id, JobRequestDto request, UserDetails userDetails) {
 
@@ -154,7 +154,7 @@ public class JobService {
 		jobRepository.save(job);
 	}
 
-	@CacheEvict(value = {"jobs", "jobs_list"}, allEntries = true)
+	@CacheEvict(value = "jobs", allEntries = true)
 	@Transactional
 	public void deleteJob(@NonNull Long id, UserDetails userDetails) {
 		String email = userDetails.getUsername();
@@ -171,7 +171,7 @@ public class JobService {
 		jobRepository.delete(job);
 	}
 
-	@CacheEvict(value = {"jobs", "jobs_list"}, allEntries = true)
+	@CacheEvict(value = "jobs", allEntries = true)
 	@Transactional
 	public void updateStatus(@NonNull Long id, JobStatus status, UserDetails userDetails) {
 		Employer employer = employerRepository.findByUser_Email(userDetails.getUsername())
@@ -185,7 +185,6 @@ public class JobService {
 		jobRepository.save(job);
 	}
 
-	@Cacheable(value = "jobs_list", key = "{#page, #size, #title, #location, #jobType, #workMode, #status}")
 	@Transactional(readOnly = true)
 	public List<JobResponseDto> getAllJobs(int page, int size, String title, String location,
 			JobType jobType, WorkMode workMode, JobStatus status) {

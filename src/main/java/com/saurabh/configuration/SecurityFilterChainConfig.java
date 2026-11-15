@@ -23,7 +23,7 @@ public class SecurityFilterChainConfig {
     private final JWTAuthenticationFilter jwtAuthenticationfilter;
     private final RateLimitingFilter rateLimitingFilter;
 
-    @Value("${app.cors.allowed-origins:http://localhost:5173,https://job-portal-frontend-mocha-ten.vercel.app,https://*.vercel.app}")
+    @Value("${app.cors.allowed-origins:http://localhost:5173,https://job-portal-frontend-mocha-ten.vercel.app,https://*.vercel.app,https://stride-backend-2001.up.railway.app}")
     private String allowedOrigins;
 
     public SecurityFilterChainConfig(AuthenticationEntryPoint authenticationEntryPoint,
